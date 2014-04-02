@@ -8,7 +8,7 @@ import (
   "strconv"
 )
 
-func CreateDB(ver string, address string, info string) {
+func CreateDB(pro string, ver string, address string, info string) {
   opts := levigo.NewOptions()
   defer opts.Close()
   opts.SetCache(levigo.NewLRUCache(3 << 30))
@@ -19,16 +19,16 @@ func CreateDB(ver string, address string, info string) {
   wo := levigo.NewWriteOptions()
   defer wo.Close()
 
-  db_version, _ := levigo.Open("./version_id.db", opts)
+  db_version, _ := levigo.Open("./"+pro+"/version_id.db", opts)
   defer db_version.Close()
   version, _ := db_version.Get(ro, []byte(ver))
   if version == nil {
     db_version.Put(wo, []byte(ver), []byte("0"))
   }
 
-  db_id, _ := levigo.Open("./dump/"+ver+"/db_id.db", opts)
-  db_info, _ := levigo.Open("./dump/"+ver+"/db_info.db", opts)
-  db_count, _ := levigo.Open("./dump/"+ver+"/db_count.db", opts)
+  db_id, _ := levigo.Open("./"+pro+"/dump/"+ver+"/db_id.db", opts)
+  db_info, _ := levigo.Open("./"+pro+"/dump/"+ver+"/db_info.db", opts)
+  db_count, _ := levigo.Open("./"+pro+"/dump/"+ver+"/db_count.db", opts)
   defer db_id.Close()
   defer db_info.Close()
   defer db_count.Close()
@@ -78,14 +78,14 @@ func CreateDB(ver string, address string, info string) {
   }
 }
 
-func GetInfoDB(ver string, key string) {
+func GetInfoDB(pro string, ver string, key string) {
   opts := levigo.NewOptions()
   defer opts.Close()
   opts.SetCache(levigo.NewLRUCache(3 << 30))
   opts.SetCreateIfMissing(true)
-  db_id, _ := levigo.Open("./"+ver+"_id.db", opts)
-  db_info, _ := levigo.Open("./"+ver+"_info.db", opts)
-  db_count, _ := levigo.Open("./"+ver+"_count.db", opts)
+  db_id, _ := levigo.Open("./"+pro+"/dump/"+ver+"/db_id.db", opts)
+  db_info, _ := levigo.Open("./"+pro+"/dump/"+ver+"/db_info.db", opts)
+  db_count, _ := levigo.Open("./"+pro+"/dump/"+ver+"/db_count.db", opts)
   defer db_id.Close()
   defer db_info.Close()
   defer db_count.Close()
@@ -110,14 +110,14 @@ func GetInfoDB(ver string, key string) {
 
 }
 
-func getListInfoDB(ver string) string {
+func GetListInfoDB(pro string, ver string) string {
   opts := levigo.NewOptions()
   defer opts.Close()
   opts.SetCache(levigo.NewLRUCache(3 << 30))
   opts.SetCreateIfMissing(true)
-  db_id, _ := levigo.Open("./"+ver+"_id.db", opts)
-  db_info, _ := levigo.Open("./"+ver+"_info.db", opts)
-  db_count, _ := levigo.Open("./"+ver+"_count.db", opts)
+  db_id, _ := levigo.Open("./"+pro+"/dump/"+ver+"/db_id.db", opts)
+  db_info, _ := levigo.Open("./"+pro+"/dump/"+ver+"/db_info.db", opts)
+  db_count, _ := levigo.Open("./"+pro+"/dump/"+ver+"/db_count.db", opts)
   defer db_id.Close()
   defer db_info.Close()
   defer db_count.Close()
@@ -130,7 +130,7 @@ func getListInfoDB(ver string) string {
   return_val = return_val + "<th align=\"left\">ID</th>\n"
   return_val = return_val + "<th align=\"right\">ADDRESS</th>\n"
   return_val = return_val + "<th align=\"right\">COUNT</th>\n"
-  return_val = return_val + "<th align=\"right\">INFO</th>\n"
+  return_val = return_val + "<th align=\"center\">INFO</th>\n"
   return_val = return_val + "</tr>\n"
   max_num_val, _ := db_id.Get(ro, []byte("MAX_NUM"))
   if max_num_val != nil {
@@ -153,7 +153,7 @@ func getListInfoDB(ver string) string {
         return_val = return_val + "<th align=\"left\">" + id_val + "</th>\n"
         return_val = return_val + "<th align=\"right\">" + string(address) + "</th>\n"
         return_val = return_val + "<th align=\"right\">" + string(count) + " </th>\n"
-        return_val = return_val + "<th align=\"right\">" + string(info) + " </th>\n"
+        return_val = return_val + "<th align=\"left\">" + string(info) + " </th>\n"
         return_val = return_val + "</tr>\n"
       }
     }
@@ -162,12 +162,12 @@ func getListInfoDB(ver string) string {
   return return_val
 }
 
-func VerInfoDB() string {
+func VerInfoDB(pro string) string {
   opts := levigo.NewOptions()
   defer opts.Close()
   opts.SetCache(levigo.NewLRUCache(3 << 30))
   opts.SetCreateIfMissing(true)
-  db_version, _ := levigo.Open("./version_id.db", opts)
+  db_version, _ := levigo.Open("./"+pro+"/version_id.db", opts)
   defer db_version.Close()
 
   ro := levigo.NewReadOptions()

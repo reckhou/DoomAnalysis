@@ -1,28 +1,36 @@
 package DoomAnalysis
 
 import (
+  "./db"
   "./dumpfile"
   "crypto/md5"
   "encoding/hex"
+  "fmt"
   "io/ioutil"
   "log"
   "net/http"
-  "time"
 )
 
 func Start() {
-  s := &http.Server{
-    Addr:           ":10010",
-    Handler:        http.HandlerFunc(httpHandler),
-    ReadTimeout:    5 * time.Second,
-    WriteTimeout:   5 * time.Second,
-    MaxHeaderBytes: 1 << 20,
+  /*
+  	  s := &http.Server{
+  			Addr:           ":10010",
+  			Handler:        http.HandlerFunc(httpHandler),
+  			ReadTimeout:    5 * time.Second,
+  			WriteTimeout:   5 * time.Second,
+  			MaxHeaderBytes: 1 << 20,
+  		}
+  */
+  http.HandleFunc("/sxd", httpHandlerSxd)
+  err := http.ListenAndServe(":10010", nil)
+  if err != nil {
+    log.Fatal("ListenAndServe :", err)
   }
 
-  log.Println(s.ListenAndServe())
+  //log.Println(s.ListenAndServe())
 }
 
-func httpHandler(w http.ResponseWriter, r *http.Request) {
+func httpHandlerSxd(w http.ResponseWriter, r *http.Request) {
 
   r.ParseForm()
   log.Println("Form:", r.Form)
@@ -32,9 +40,9 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
     if len(val) > 0 && val[0] == "get" {
       if len(r.Form) > 1 {
         ver := r.Form["ver"][0]
-        fmt.Fprintf(w, getListInfoDB(ver))
+        fmt.Fprintf(w, db.GetListInfoDB("sxd", ver))
       } else {
-        fmt.Fprintf(w, VerInfoDB())
+        fmt.Fprintf(w, db.VerInfoDB("sxd"))
       }
     } else if len(val) > 0 && val[0] == "post" {
       reqContent, err := ioutil.ReadAll(r.Body)
@@ -48,7 +56,7 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 
       result := CheckLegal(string(reqContent))
       if result {
-        go dumpfile.ProcessDumpFile(reqContent)
+        go dumpfile.ProcessDumpFile("sxd", reqContent)
       } else {
         log.Println("error check md5 :", r.Form)
       }

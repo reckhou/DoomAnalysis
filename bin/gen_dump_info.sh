@@ -2,7 +2,8 @@
 
 VERSION=$1
 FILENAME=$2
+PROJECTNAME=$3
 
-cd "./dump/$VERSION"
-../../tools/minidump_stackwalk $FILENAME symbols/ > "$FILENAME.info"
+cd "./$PROJECTNAME/dump/$VERSION"
+../../../tools/minidump_stackwalk $FILENAME symbols/ > "$FILENAME.info"
 

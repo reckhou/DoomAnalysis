@@ -2,7 +2,8 @@
 
 VERSION=$1
 FILENAME=$2
+PROJECTNAME=$3
 NDK=./android-ndk-r9d
 
-cd "./dump/$VERSION"
-../../tools/ndk-stack -sym ../../lib/ -dump $FILENAME > $FILENAME.info
+cd "./$PROJECTNAME/dump/$VERSION"
+../../../tools/ndk-stack -sym ../../lib/ -dump $FILENAME > $FILENAME.info
