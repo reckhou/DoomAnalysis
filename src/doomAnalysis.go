@@ -23,24 +23,37 @@ func Start() {
 }
 
 func httpHandler(w http.ResponseWriter, r *http.Request) {
-  reqContent, err := ioutil.ReadAll(r.Body)
-  if err != nil {
-    log.Println(err)
-    return
-  } else if reqContent == nil || len(reqContent) < 1 {
-    log.Println("empty body!")
-    return
-  }
-  r.ParseForm()
-  //log.Println("Header:", r.Header)
-  //log.Println("Body:", string(reqContent))
-  //log.Println("Form:", r.Form)
 
-  result := CheckLegal(string(reqContent))
-  if result {
-    dumpfile.ProcessDumpFile(reqContent)
-  } else {
-    log.Println("error check md5 :", r.Form)
+  r.ParseForm()
+  log.Println("Form:", r.Form)
+
+  if len(r.Form) > 0 {
+    val := r.Form["par"]
+    if len(val) > 0 && val[0] == "get" {
+      if len(r.Form) > 1 {
+        ver := r.Form["ver"][0]
+        fmt.Fprintf(w, getListInfoDB(ver))
+      } else {
+        fmt.Fprintf(w, VerInfoDB())
+      }
+    } else if len(val) > 0 && val[0] == "post" {
+      reqContent, err := ioutil.ReadAll(r.Body)
+      if err != nil {
+        log.Println(err)
+        return
+      } else if reqContent == nil || len(reqContent) < 1 {
+        log.Println("empty body!")
+        return
+      }
+
+      result := CheckLegal(string(reqContent))
+      if result {
+        go dumpfile.ProcessDumpFile(reqContent)
+      } else {
+        log.Println("error check md5 :", r.Form)
+      }
+
+    }
   }
 
 }
