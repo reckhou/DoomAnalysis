@@ -29,6 +29,7 @@ type DumpFileInfo struct {
   block_in       bool
   so_address     int64
   project        string
+  ndk_stack_info string
 }
 
 func (info *DumpFileInfo) GenInfo(s string) {
@@ -193,6 +194,7 @@ func (info *DumpFileInfo) GenNdkStack(s string) {
   if !info.block_in {
     re := regexp.MustCompile("\\s\\d{1,4}\\s{2}[^\\s]+\\.so")
     matched := re.FindString(s)
+    info.ndk_stack_info = info.ndk_stack_info + s + "<br>"
     if matched != "" {
 
       re = regexp.MustCompile("[a-z&A-Z&\\.]+")
@@ -275,7 +277,7 @@ func (info *DumpFileInfo) GenNdkfile() {
     binary.BigEndian.PutUint32(buf, uint32(address))
 
     if i < 10 {
-      result_str = "0" + strconv.Itoa(i) + "  pc " + hex.EncodeToString(buf) + "  " + info.info_["version"] + "_" + info.stack_lib_name[i] + " ()\n"
+      result_str = "0" + strconv.Itoa(i) + "  pc " + hex.EncodeToString(buf) + "  " + info.stack_lib_name[i] + " ()\n"
       file_context += (stack_head + result_str)
     }
 
@@ -316,11 +318,16 @@ func (info *DumpFileInfo) GenDbInfo() {
         matched := re.FindString(temp_str)
 
         if matched != "" && address_info > 0 {
-          re = regexp.MustCompile("[0-9|a-f]{8}")
-          key := re.FindString(matched)
 
-          info_key = info_key + "_" + key
-          address_info--
+          prostack_flag, _ := regexp.MatchString("[0-9]{1,9}_libgame.so", temp_str)
+          if prostack_flag {
+            re = regexp.MustCompile("[0-9|a-f]{8}")
+            key := re.FindString(matched)
+
+            info_key = info_key + "_" + key
+            address_info--
+          }
+
         }
 
         info_str = info_str + temp_str + "<br>"
@@ -332,7 +339,7 @@ func (info *DumpFileInfo) GenDbInfo() {
     }
   }
 
-  db.CreateDB(info.project, info.info_["version"], info_key, info_str)
+  db.CreateDB(info.project, info.info_["version"], info_key, info_str, info.ndk_stack_info)
 }
 
 func ProcessDumpFile(project string, co []byte) {
@@ -347,7 +354,7 @@ func ProcessDumpFile(project string, co []byte) {
   info.block_in = false
   info.project = project
 
-  if s[0:2] == "LOG" {
+  if s[0:3] == "LOG" {
     info.GenLogInfo(s)
   } else {
 

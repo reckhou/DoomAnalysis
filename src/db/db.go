@@ -8,7 +8,7 @@ import (
   "strconv"
 )
 
-func CreateDB(pro string, ver string, address string, info string) {
+func CreateDB(pro string, ver string, address string, info string, break_pad_info string) {
   opts := levigo.NewOptions()
   defer opts.Close()
   opts.SetCache(levigo.NewLRUCache(3 << 30))
@@ -28,10 +28,12 @@ func CreateDB(pro string, ver string, address string, info string) {
 
   db_id, _ := levigo.Open("./"+pro+"/dump/"+ver+"/db_id.db", opts)
   db_info, _ := levigo.Open("./"+pro+"/dump/"+ver+"/db_info.db", opts)
+  db_breakpad_info, _ := levigo.Open("./"+pro+"/dump/"+ver+"/db_breakpad_info.db", opts)
   db_count, _ := levigo.Open("./"+pro+"/dump/"+ver+"/db_count.db", opts)
   defer db_id.Close()
   defer db_info.Close()
   defer db_count.Close()
+  defer db_breakpad_info.Close()
 
   // if ro and wo are not used again, be sure to Close them.
 
@@ -60,6 +62,7 @@ func CreateDB(pro string, ver string, address string, info string) {
   if s == nil {
     log.Println("db_info Put:", address)
     db_info.Put(wo, []byte(address), []byte(info))
+    db_breakpad_info.Put(wo, []byte(address), []byte(break_pad_info))
   }
 
   s, _ = db_count.Get(ro, []byte(address))
@@ -78,38 +81,6 @@ func CreateDB(pro string, ver string, address string, info string) {
   }
 }
 
-func GetInfoDB(pro string, ver string, key string) {
-  opts := levigo.NewOptions()
-  defer opts.Close()
-  opts.SetCache(levigo.NewLRUCache(3 << 30))
-  opts.SetCreateIfMissing(true)
-  db_id, _ := levigo.Open("./"+pro+"/dump/"+ver+"/db_id.db", opts)
-  db_info, _ := levigo.Open("./"+pro+"/dump/"+ver+"/db_info.db", opts)
-  db_count, _ := levigo.Open("./"+pro+"/dump/"+ver+"/db_count.db", opts)
-  defer db_id.Close()
-  defer db_info.Close()
-  defer db_count.Close()
-
-  ro := levigo.NewReadOptions()
-  defer ro.Close()
-
-  address, _ := db_id.Get(ro, []byte(key))
-  if address != nil {
-    log.Println("address: ", string(address))
-
-    info, _ := db_info.Get(ro, []byte(address))
-    if info != nil {
-      log.Println("info: ", string(info[:]))
-    }
-
-    info, _ = db_count.Get(ro, []byte(address))
-    if info != nil {
-      log.Println("info num: ", string(info[:]))
-    }
-  }
-
-}
-
 func GetListInfoDB(pro string, ver string) string {
   opts := levigo.NewOptions()
   defer opts.Close()
@@ -118,9 +89,11 @@ func GetListInfoDB(pro string, ver string) string {
   db_id, _ := levigo.Open("./"+pro+"/dump/"+ver+"/db_id.db", opts)
   db_info, _ := levigo.Open("./"+pro+"/dump/"+ver+"/db_info.db", opts)
   db_count, _ := levigo.Open("./"+pro+"/dump/"+ver+"/db_count.db", opts)
+  db_breakpad_info, _ := levigo.Open("./"+pro+"/dump/"+ver+"/db_breakpad_info.db", opts)
   defer db_id.Close()
   defer db_info.Close()
   defer db_count.Close()
+  defer db_breakpad_info.Close()
 
   ro := levigo.NewReadOptions()
   defer ro.Close()
@@ -131,6 +104,7 @@ func GetListInfoDB(pro string, ver string) string {
   return_val = return_val + "<th align=\"right\">ADDRESS</th>\n"
   return_val = return_val + "<th align=\"right\">COUNT</th>\n"
   return_val = return_val + "<th align=\"center\">INFO</th>\n"
+  return_val = return_val + "<th align=\"center\">BREAKPAD</th>\n"
   return_val = return_val + "</tr>\n"
   max_num_val, _ := db_id.Get(ro, []byte("MAX_NUM"))
   if max_num_val != nil {
@@ -149,11 +123,13 @@ func GetListInfoDB(pro string, ver string) string {
 
         info, _ := db_info.Get(ro, []byte(address))
         count, _ := db_count.Get(ro, []byte(address))
+        info_pad, _ := db_breakpad_info.Get(ro, []byte(address))
         return_val = return_val + "<tr>\n"
         return_val = return_val + "<th align=\"left\">" + id_val + "</th>\n"
         return_val = return_val + "<th align=\"right\">" + string(address) + "</th>\n"
         return_val = return_val + "<th align=\"right\">" + string(count) + " </th>\n"
         return_val = return_val + "<th align=\"left\">" + string(info) + " </th>\n"
+        return_val = return_val + "<th align=\"left\">" + string(info_pad) + " </th>\n"
         return_val = return_val + "</tr>\n"
       }
     }
