@@ -8,7 +8,14 @@ import (
   "strconv"
 )
 
-func CreateDB(pro string, ver string, address string, info string, break_pad_info string) {
+var db_channel chan int
+
+func InitChannelFlag() {
+  db_channel = make(chan int, 1)
+
+}
+
+func CreateDB(pro string, ver string, address string, info string, uuid string) {
   opts := levigo.NewOptions()
   defer opts.Close()
   opts.SetCache(levigo.NewLRUCache(3 << 30))
@@ -19,6 +26,7 @@ func CreateDB(pro string, ver string, address string, info string, break_pad_inf
   wo := levigo.NewWriteOptions()
   defer wo.Close()
 
+  db_channel <- 1
   db_version, _ := levigo.Open("./"+pro+"/version_id.db", opts)
   defer db_version.Close()
   version, _ := db_version.Get(ro, []byte(ver))
@@ -44,11 +52,24 @@ func CreateDB(pro string, ver string, address string, info string, break_pad_inf
     num_val, err := strconv.Atoi(string(s))
     if err != nil {
       log.Println("MAX_NUM error:", ver)
+      <-db_channel
       return
     }
     max_num = num_val
   }
   max_num++
+
+  info_val := "<a href=\"?par=file&ver=" + ver + "&pro=sxd&filename=" + uuid + ".log \">" + uuid + ".log" + "</a><br>"
+  info_val = info_val + "<a href=\"?par=file&ver=" + ver + "&pro=" + pro + "&filename=" + uuid + ".txt.info \">" + uuid + ".info" + "</a><br>"
+  info_val = info_val + "<a href=\"?par=file&ver=" + ver + "&pro=" + pro + "&filename=" + uuid + ".txt.ndk.info \">" + uuid + ".ndk" + "</a><br>"
+  s, _ = db_breakpad_info.Get(ro, []byte(address))
+  if s == nil {
+    log.Println("db_breakpad_info Put:", address)
+    db_breakpad_info.Put(wo, []byte(address), []byte(info_val))
+  } else {
+    valueall := string(s) + info_val
+    db_breakpad_info.Put(wo, []byte(address), []byte(valueall))
+  }
 
   s, _ = db_id.Get(ro, []byte(address))
   if s == nil {
@@ -56,13 +77,13 @@ func CreateDB(pro string, ver string, address string, info string, break_pad_inf
     db_id.Put(wo, []byte("MAX_NUM"), []byte(max_num_val))
     db_id.Put(wo, []byte(address), []byte(max_num_val))
     db_id.Put(wo, []byte(max_num_val), []byte(address))
+
   }
 
   s, _ = db_info.Get(ro, []byte(address))
   if s == nil {
     log.Println("db_info Put:", address)
     db_info.Put(wo, []byte(address), []byte(info))
-    db_breakpad_info.Put(wo, []byte(address), []byte(break_pad_info))
   }
 
   s, _ = db_count.Get(ro, []byte(address))
@@ -79,6 +100,8 @@ func CreateDB(pro string, ver string, address string, info string, break_pad_inf
     address_num_val := strconv.Itoa(num_val)
     db_count.Put(wo, []byte(address), []byte(address_num_val))
   }
+
+  <-db_channel
 }
 
 func GetListInfoDB(pro string, ver string) string {
@@ -114,8 +137,9 @@ func GetListInfoDB(pro string, ver string) string {
       return ""
     }
     max_num := num_val
-
+    log.Println("MAX_NUM:", max_num)
     for i := 1; i <= max_num; i++ {
+
       id_val := strconv.Itoa(i)
       address, _ := db_id.Get(ro, []byte(id_val))
 

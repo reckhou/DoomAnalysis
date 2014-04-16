@@ -3,6 +3,7 @@ package DoomAnalysis
 import (
   "./db"
   "./dumpfile"
+  "./file"
   "crypto/md5"
   "encoding/hex"
   "fmt"
@@ -21,6 +22,7 @@ func Start() {
   			MaxHeaderBytes: 1 << 20,
   		}
   */
+  db.InitChannelFlag()
   http.HandleFunc("/sxd", httpHandlerSxd)
   err := http.ListenAndServe(":10010", nil)
   if err != nil {
@@ -59,6 +61,24 @@ func httpHandlerSxd(w http.ResponseWriter, r *http.Request) {
         go dumpfile.ProcessDumpFile("sxd", reqContent)
       } else {
         log.Println("error check md5 :", r.Form)
+      }
+
+    } else if len(val) > 0 && val[0] == "file" {
+      if len(r.Form) > 2 {
+        pro := r.Form["pro"][0]
+        filename := r.Form["filename"][0]
+        ver := r.Form["ver"][0]
+        path := "./" + pro + "/dump/" + ver + "/" + filename
+        fmt.Fprintf(w, string(file.ReadFile(path)))
+      }
+    } else if len(val) > 0 && val[0] == "recreate" {
+      if len(r.Form) > 2 {
+        pro := r.Form["pro"][0]
+        ver := r.Form["ver"][0]
+        path := "./" + pro + "/dump/" + ver + "/"
+
+        go dumpfile.ListFileName(path, ver, pro)
+
       }
 
     }

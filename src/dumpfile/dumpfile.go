@@ -1,18 +1,17 @@
 package dumpfile
 
 import (
-  //"./src"
   "../db"
   "../file"
+  "encoding/binary"
+  "encoding/hex"
   "log"
   "os"
   "os/exec"
+  "path/filepath"
   "regexp"
-  //"strings"
-  "encoding/binary"
-  "encoding/hex"
   "strconv"
-  // "time"
+  "strings"
 )
 
 // 上传的dump文件行
@@ -117,11 +116,13 @@ func (info *DumpFileInfo) GenSym() bool {
     b, err := cmd.Output()
     if err != nil {
       log.Println("GenSym err:" + err.Error())
+      return false
     }
     log.Println("GenSym info:" + string(b))
+    return true
   }
 
-  return true
+  return false
 }
 
 func (info *DumpFileInfo) GenBreakpadDumpInfo() {
@@ -319,7 +320,7 @@ func (info *DumpFileInfo) GenDbInfo() {
 
         if matched != "" && address_info > 0 {
 
-          prostack_flag, _ := regexp.MatchString("[0-9]{1,9}_libgame.so", temp_str)
+          prostack_flag, _ := regexp.MatchString("libgame.so", temp_str)
           if prostack_flag {
             re = regexp.MustCompile("[0-9|a-f]{8}")
             key := re.FindString(matched)
@@ -339,7 +340,7 @@ func (info *DumpFileInfo) GenDbInfo() {
     }
   }
 
-  db.CreateDB(info.project, info.info_["version"], info_key, info_str, info.ndk_stack_info)
+  db.CreateDB(info.project, info.info_["version"], info_key, info_str, info.info_["UUID"])
 }
 
 func ProcessDumpFile(project string, co []byte) {
@@ -369,4 +370,43 @@ func ProcessDumpFile(project string, co []byte) {
   }
 
   log.Println("ProcessDumpFile end")
+}
+
+func ListFileName(path string, ver string, pro string) {
+  fullPath, _ := filepath.Abs(path)
+  filepath.Walk(fullPath, func(path string, fi os.FileInfo, err error) error {
+    if nil == fi {
+      return err
+    }
+    if fi.IsDir() {
+      return nil
+    }
+
+    name := fi.Name()
+    file_list := strings.Split(name, ".")
+    filename := file_list[0]
+    file_ext := file_list[1]
+
+    if file_ext == "txt" {
+      var info DumpFileInfo
+      info.block_in = false
+      info.project = pro
+
+      info.info_ = make(map[string]string)
+      info.info_[key_arr[1]] = filename
+      info.info_[key_arr[3]] = ver
+      info.info_[key_arr[4]] = pro
+
+      info.file_name_ = info.info_["UUID"] + ".txt"
+
+      result := info.GenSym()
+      if result {
+        info.GenBreakpadDumpInfo()
+        info.GenNdkDumpInfo()
+        info.GenDbInfo()
+      }
+    }
+
+    return nil
+  })
 }
