@@ -4,13 +4,29 @@ import (
   "./db"
   "./dumpfile"
   "./file"
+  gozd "bitbucket.org/PinIdea/zero-downtime-daemon"
   "crypto/md5"
   "encoding/hex"
   "fmt"
   "io/ioutil"
   "log"
+  "net"
   "net/http"
+  "os"
+  "syscall"
 )
+
+type HTTPServer struct{}
+
+func handleListners(cl chan net.Listener) {
+
+  for v := range cl {
+    go func(l net.Listener) {
+      handler := new(HTTPServer)
+      http.Serve(l, handler)
+    }(v)
+  }
+}
 
 func Start() {
   /*
@@ -23,16 +39,52 @@ func Start() {
   		}
   */
   db.InitChannelFlag()
-  http.HandleFunc("/sxd", httpHandlerSxd)
-  err := http.ListenAndServe(":10010", nil)
+  /*http.HandleFunc("/sxd", httpHandlerSxd)
+    err := http.ListenAndServe(":10010", nil)
+    if err != nil {
+    	log.Fatal("ListenAndServe :", err)
+    }*/
+
+  ctx := gozd.Context{
+    Hash:    "pin_dump",
+    Logfile: os.TempDir() + "/pin_dump.log",
+    Directives: map[string]gozd.Server{
+      "sock": gozd.Server{
+        Network: "unix",
+        Address: os.TempDir() + "/pin_dump.sock",
+      },
+      "port1": gozd.Server{
+        Network: "tcp",
+        Address: "115.28.202.194:10010",
+      },
+    },
+  }
+
+  cl := make(chan net.Listener, 1)
+  go handleListners(cl)
+  sig, err := gozd.Daemonize(ctx, cl) // returns channel that connects with daemon
   if err != nil {
-    log.Fatal("ListenAndServe :", err)
+    log.Println("error: ", err)
+    return
+  }
+
+  // other initializations or config setting
+
+  for s := range sig {
+    switch s {
+    case syscall.SIGHUP, syscall.SIGUSR2:
+      // do some custom jobs while reload/hotupdate
+
+    case syscall.SIGTERM:
+      // do some clean up and exit
+      return
+    }
   }
 
   //log.Println(s.ListenAndServe())
 }
 
-func httpHandlerSxd(w http.ResponseWriter, r *http.Request) {
+func (s HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
   r.ParseForm()
   log.Println("Form:", r.Form)
