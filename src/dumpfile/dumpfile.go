@@ -368,6 +368,7 @@ func ProcessDumpFile(project string, co []byte) {
 }
 
 func ListFileName(path string, ver string, pro string) {
+	dbinfo.DeleteInfoDB(pro, ver)
 	fullPath, _ := filepath.Abs(path)
 	log.Println("ListFileName: ", fullPath)
 	filepath.Walk(fullPath, func(path string, fi os.FileInfo, err error) error {

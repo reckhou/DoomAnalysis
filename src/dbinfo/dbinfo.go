@@ -177,6 +177,26 @@ func GetListInfoDB(pro string, ver string) string {
 
 }
 
+func DeleteInfoDB(pro string, ver string) {
+	test, _ := Init()
+	if test.db == nil {
+		return
+	}
+	defer test.db.Close()
+
+	stmt, err := test.db.Prepare("delete from " + pro + " where version=?")
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+	defer stmt.Close()
+	if result, err := stmt.Exec(ver); err == nil {
+		if c, err := result.RowsAffected(); err == nil {
+			log.Println("remove count : ", c)
+		}
+	}
+}
+
 func VerInfoDB(pro string) string {
 	test, _ := Init()
 	if test.db == nil {
