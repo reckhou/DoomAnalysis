@@ -16,7 +16,7 @@ type DumpMysql struct {
 /* 初始化数据库引擎 */
 func Init() (*DumpMysql, error) {
 	test := new(DumpMysql)
-	db, err := sql.Open("mysql", "root:pindump123@tcp(127.0.0.1:3306)/sxddump?charset=utf8")
+	db, err := sql.Open("mysql", "crash:crash2014@tcp(rdsiznueuzzvezb.mysql.rds.aliyuncs.com:3306)/crash?charset=utf8")
 
 	if err != nil {
 		log.Println("database initialize error : ", err.Error())
@@ -155,6 +155,7 @@ func GetListInfoDB(pro string, ver string) string {
 			info_val := "<a href=\"?pat=file&ver=" + ver + "&pro=" + pro + "&filename=" + uuid + ".log \">" + uuid + ".log" + "</a><br>"
 			info_val = info_val + "<a href=\"?pat=file&ver=" + ver + "&pro=" + pro + "&filename=" + uuid + ".txt.info \">" + uuid + ".info" + "</a><br>"
 			info_val = info_val + "<a href=\"?pat=file&ver=" + ver + "&pro=" + pro + "&filename=" + uuid + ".txt.ndk.info \">" + uuid + ".ndk" + "</a><br>"
+			info_val = info_val + "<a href=\"?pat=detail&ver=" + ver + "&pro=" + pro + "&id=" + id_val + " \">" + "more..." + "</a><br>"
 
 			color := ""
 			if percent > 0.5 {
@@ -174,6 +175,43 @@ func GetListInfoDB(pro string, ver string) string {
 
 	return_val = return_val + "</table>\n</body>\n</html>"
 	return return_val
+
+}
+
+func GetFileListInfoDB(pro string, ver string, id string) string {
+
+	test, _ := Init()
+	if test.db == nil {
+		return ""
+	}
+	defer test.db.Close()
+
+	// 输出
+	select_sql := "select filelist from " + pro + " where id =" + id
+	select_rows, err := test.db.Query(select_sql)
+	defer select_rows.Close()
+	if err != nil {
+		log.Println(err.Error())
+		return ""
+	}
+
+	var filelist_val string
+	info_val := "<html>\n<body>\n"
+	for select_rows.Next() {
+		if err := select_rows.Scan(&filelist_val); err == nil {
+
+			uuid := strings.Split(filelist_val, " ")
+
+			for _, v := range uuid {
+				info_val = info_val + "<a href=\"?pat=file&ver=" + ver + "&pro=" + pro + "&filename=" + v + ".log \">" + v + ".log" + "</a><br>"
+				info_val = info_val + "<a href=\"?pat=file&ver=" + ver + "&pro=" + pro + "&filename=" + v + ".txt.info \">" + v + ".info" + "</a><br>"
+				info_val = info_val + "<a href=\"?pat=file&ver=" + ver + "&pro=" + pro + "&filename=" + v + ".txt.ndk.info \">" + v + ".ndk" + "</a><br>"
+			}
+
+		}
+	}
+	info_val = info_val + "</body>\n</html>"
+	return info_val
 
 }
 

@@ -146,6 +146,24 @@ func (s HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			path := "./" + pro + "/dump/" + ver + "/"
 
 			go dumpfile.ListFileName(path, ver, pro)
+		} else if pat == "detail" {
+			id_array := r.Form["id"]
+
+			if len(id_array) < 0 {
+				log.Println("url error")
+				return
+			}
+			id := r.Form["id"][0]
+
+			ver_array := r.Form["ver"]
+
+			if len(ver_array) < 0 {
+				log.Println("url error")
+				return
+			}
+			ver := r.Form["ver"][0]
+
+			fmt.Fprintf(w, dbinfo.GetFileListInfoDB(pro, ver, id))
 		}
 
 	}
@@ -195,10 +213,6 @@ func CheckLegal(s string) bool {
 		}
 	}
 
-	if string(s[check_str_len]) != "M" || string(s[check_str_len+1]) != "D" || string(s[check_str_len+2]) != "M" || string(s[check_str_len+3]) != "P" {
-		return false
-	}
-
 	md5_str := s[4 : index-1]
 	check_str := s[index:check_str_len]
 	h := md5.New()
@@ -206,6 +220,15 @@ func CheckLegal(s string) bool {
 	result_str := hex.EncodeToString(h.Sum(nil))
 
 	if md5_str == result_str {
+
+		if s[0:3] == "LOG" {
+			return true
+		}
+
+		if string(s[check_str_len]) != "M" || string(s[check_str_len+1]) != "D" || string(s[check_str_len+2]) != "M" || string(s[check_str_len+3]) != "P" {
+			return false
+		}
+
 		return true
 	} else {
 		return false
