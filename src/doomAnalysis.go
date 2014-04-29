@@ -118,6 +118,15 @@ func (s HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprintf(w, dbinfo.GetListInfoDB(pro, ver))
 			}
 		} else if pat == "post" {
+
+			lianyun_array := r.Form["lianyun"]
+
+			if len(lianyun_array) < 0 {
+				log.Println("lianyun error")
+				return
+			}
+			lianyun := r.Form["lianyun"][0]
+
 			reqContent, err := ioutil.ReadAll(r.Body)
 			if err != nil {
 				log.Println(err)
@@ -129,30 +138,10 @@ func (s HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 			result := CheckLegal(string(reqContent))
 			if result {
-				go dumpfile.ProcessDumpFile(pro, reqContent)
+				go dumpfile.ProcessDumpFile(pro, reqContent, lianyun)
 			} else {
 				log.Println("error check md5 :", r.Form)
 			}
-		} else if pat == "file" {
-			filename_array := r.Form["filename"]
-
-			if len(filename_array) < 0 {
-				log.Println("url error")
-				return
-			}
-			filename := r.Form["filename"][0]
-
-			ver_array := r.Form["ver"]
-
-			if len(ver_array) < 0 {
-				log.Println("url error")
-				return
-			}
-			ver := r.Form["ver"][0]
-
-			path := "./" + pro + "/dump/" + ver + "/" + filename
-			http.ServeFile(w, r, path)
-			//w.Write(file.ReadFile(path))
 		} else if pat == "recreate" {
 			ver_array := r.Form["ver"]
 
@@ -161,9 +150,18 @@ func (s HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			ver := r.Form["ver"][0]
+
+			lianyun_array := r.Form["lianyun"]
+
+			if len(lianyun_array) < 0 {
+				log.Println("lianyun error")
+				return
+			}
+			lianyun := r.Form["lianyun"][0]
+
 			path := "./" + pro + "/dump/" + ver + "/"
 
-			go dumpfile.ListFileName(path, ver, pro)
+			go dumpfile.ListFileName(path, ver, pro, lianyun)
 		} else if pat == "detail" {
 			id_array := r.Form["id"]
 
@@ -201,7 +199,7 @@ func (s HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 			result := CheckLegal(string(reqContent))
 			if result {
-				go dumpfile.ProcessDumpFile("sxd", reqContent)
+				go dumpfile.ProcessDumpFile("sxda", reqContent, "sxda")
 			} else {
 				log.Println("error check md5 :", r.Form)
 			}

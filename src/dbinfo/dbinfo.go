@@ -36,7 +36,7 @@ func (test *DumpMysql) Close() {
 
 }
 
-func (test *DumpMysql) CreateDB(pro string, ver string, address string, info string, uuid string) {
+func (test *DumpMysql) CreateDB(pro string, ver string, address string, info string, uuid string, lianyun string) {
 
 	if test.db == nil {
 		return
@@ -76,13 +76,13 @@ func (test *DumpMysql) CreateDB(pro string, ver string, address string, info str
 		}
 	}
 
-	stmt, err := test.db.Prepare("insert into " + pro + "(address,version,count,ndk,filelist)values(?,?,?,?,?)")
+	stmt, err := test.db.Prepare("insert into " + pro + "(address,version,count,ndk,filelist,lianyun)values(?,?,?,?,?,?)")
 	if err != nil {
 		log.Println("Prepare :", err.Error())
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec([]byte(address), []byte(ver), 1, []byte(info), []byte(uuid))
+	_, err = stmt.Exec([]byte(address), []byte(ver), 1, []byte(info), []byte(uuid), []byte(lianyun))
 	if err != nil {
 		log.Println(err.Error())
 		return

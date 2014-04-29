@@ -4,9 +4,9 @@
 - - - 
 ####URL
 查看DUMP 参数: pat=模式 pro=项目名
-http://115.28.202.194:10010/?pat=get&pro=sxd 
-重建特定版本DUMP信息 参数: pat=模式 pro=项目名 ver=版本号 
-http://115.28.202.194:10010/?pat=recreate&pro=sxd&ver=5572
+http://115.28.202.194:10010/?pat=get&pro=sxda 
+重建特定版本DUMP信息 参数: pat=模式 pro=项目名 ver=版本号 lianyun=联运平台
+http://115.28.202.194:10010/?pat=recreate&pro=sxda&ver=5572&lianyun=sxda
 - - -
 ####目录结构
 ```
@@ -21,7 +21,7 @@ root -- 根目录
                    |       |-minidump_stackwalk -- 生成breakpad dump程序
                    |       |-ndk-stack          -- 生成ndk dump程序
                    |
-                   |-sxd ---           -- 项目文件夹
+                   |-sxda ---           -- 项目文件夹
                            |-lib --       -- 存放对应版本的so
                            |     |-5146_libgame.so
                            |      ....
@@ -43,6 +43,7 @@ version varchar(10) NOT NULL,   // 版本
 count int NOT NULL,             // 数量
 ndk text NOT NULL,              // 简易堆栈信息
 filelist text NOT NULL,         // 对应的dump文本 uuid
+lianyun varchar(20) NOT NULL default 'sxda', // 联运平台标记
 PRIMARY KEY (id)
 );
 - - -
@@ -61,6 +62,7 @@ UUID.txt.ndk -- ndk dump文件
 UUID.txt.ndk.info -- 解析出的ndk信息文件
 
 4. 通过解析堆栈信息,插入到数据库中
+5. 打包dump文件
 
 
 

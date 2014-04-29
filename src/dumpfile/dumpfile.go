@@ -30,6 +30,7 @@ type DumpFileInfo struct {
 	so_address     int64
 	project        string
 	ndk_stack_info string
+	lianyun        string
 }
 
 func (info *DumpFileInfo) GenInfo(s string) {
@@ -339,7 +340,7 @@ func (info *DumpFileInfo) GenDbInfo() {
 	mysql_c, db_err := dbinfo.Init()
 	if db_err == nil {
 		defer mysql_c.Close()
-		mysql_c.CreateDB(info.project, info.info_["version"], info_key, info_str, info.info_["UUID"])
+		mysql_c.CreateDB(info.project, info.info_["version"], info_key, info_str, info.info_["UUID"], info.lianyun)
 	}
 }
 
@@ -352,7 +353,7 @@ func (info *DumpFileInfo) GenTar(mode string) {
 	}
 }
 
-func ProcessDumpFile(project string, co []byte) {
+func ProcessDumpFile(project string, co []byte, lianyun string) {
 
 	//context := file.ReadFile("./a.txt")
 	//s := string(context)
@@ -361,6 +362,7 @@ func ProcessDumpFile(project string, co []byte) {
 	var info DumpFileInfo
 	info.block_in = false
 	info.project = project
+	info.lianyun = lianyun
 
 	if s[0:3] == "LOG" {
 		info.GenLogInfo(s)
@@ -378,7 +380,7 @@ func ProcessDumpFile(project string, co []byte) {
 
 }
 
-func ListFileName(path string, ver string, pro string) {
+func ListFileName(path string, ver string, pro string, lianyun string) {
 	dbinfo.DeleteInfoDB(pro, ver)
 	fullPath, _ := filepath.Abs(path)
 	log.Println("ListFileName: ", fullPath)
@@ -398,6 +400,7 @@ func ListFileName(path string, ver string, pro string) {
 			var info DumpFileInfo
 			info.block_in = false
 			info.project = pro
+			info.lianyun = lianyun
 
 			info.info_ = make(map[string]string)
 			info.info_[key_arr[1]] = filename
