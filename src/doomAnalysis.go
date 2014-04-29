@@ -4,7 +4,7 @@ import (
 	gozd "bitbucket.org/PinIdea/zero-downtime-daemon"
 	"bitbucket.org/reckhou/DoomAnalysis/src/dbinfo"
 	"bitbucket.org/reckhou/DoomAnalysis/src/dumpfile"
-	"bitbucket.org/reckhou/DoomAnalysis/src/file"
+	//"bitbucket.org/reckhou/DoomAnalysis/src/file"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
@@ -13,6 +13,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 	"syscall"
 )
 
@@ -73,6 +74,22 @@ func (s HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	r.ParseForm()
 	log.Println("Form:", r.Form)
+	log.Println("Url", r.URL)
+	log.Println("RequestURL", r.RequestURI)
+
+	url_list := strings.Split(r.RequestURI, "/")
+
+	if len(url_list) >= 2 {
+		if url_list[1] == "file" && len(url_list) == 5 {
+			pro := url_list[2]
+			ver := url_list[3]
+			file_name := url_list[4]
+
+			path := "./" + pro + "/dump/" + ver + "/" + file_name
+			http.ServeFile(w, r, path)
+			return
+		}
+	}
 
 	// 新版参数解析
 	if len(r.Form) >= 2 {
@@ -134,7 +151,8 @@ func (s HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			ver := r.Form["ver"][0]
 
 			path := "./" + pro + "/dump/" + ver + "/" + filename
-			fmt.Fprintf(w, string(file.ReadFile(path)))
+			http.ServeFile(w, r, path)
+			//w.Write(file.ReadFile(path))
 		} else if pat == "recreate" {
 			ver_array := r.Form["ver"]
 

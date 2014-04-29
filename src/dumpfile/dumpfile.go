@@ -343,6 +343,15 @@ func (info *DumpFileInfo) GenDbInfo() {
 	}
 }
 
+func (info *DumpFileInfo) GenTar(mode string) {
+	// info.info_["UUID"]
+	cmd := exec.Command("/bin/sh", "gen_tar.sh", info.info_["version"], info.project, info.info_["UUID"], mode)
+	_, err := cmd.Output()
+	if err != nil {
+		log.Println("GenSym err:" + err.Error())
+	}
+}
+
 func ProcessDumpFile(project string, co []byte) {
 
 	//context := file.ReadFile("./a.txt")
@@ -362,6 +371,8 @@ func ProcessDumpFile(project string, co []byte) {
 			info.GenBreakpadDumpInfo()
 			info.GenNdkDumpInfo()
 			info.GenDbInfo()
+			// tar
+			info.GenTar("c")
 		}
 	}
 
@@ -382,9 +393,8 @@ func ListFileName(path string, ver string, pro string) {
 		name := fi.Name()
 		file_list := strings.Split(name, ".")
 		filename := file_list[0]
-		file_ext := file_list[1]
 
-		if file_ext == "txt" {
+		if len(file_list) >= 3 && file_list[2] == "info" {
 			var info DumpFileInfo
 			info.block_in = false
 			info.project = pro
@@ -396,11 +406,14 @@ func ListFileName(path string, ver string, pro string) {
 
 			info.file_name_ = info.info_["UUID"] + ".txt"
 			log.Println("recreate: ", name)
+			info.GenTar("x")
+
 			result := info.GenSym()
 			if result {
 				info.GenBreakpadDumpInfo()
 				info.GenNdkDumpInfo()
 				info.GenDbInfo()
+				info.GenTar("c")
 			}
 		}
 

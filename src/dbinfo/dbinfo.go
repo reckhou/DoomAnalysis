@@ -152,9 +152,7 @@ func GetListInfoDB(pro string, ver string) string {
 			percent := float64(count_val) * 100.0 / float64(dump_count)
 
 			uuid := strings.Split(filelist_val, " ")[0]
-			info_val := "<a href=\"?pat=file&ver=" + ver + "&pro=" + pro + "&filename=" + uuid + ".log \">" + uuid + ".log" + "</a><br>"
-			info_val = info_val + "<a href=\"?pat=file&ver=" + ver + "&pro=" + pro + "&filename=" + uuid + ".txt.info \">" + uuid + ".info" + "</a><br>"
-			info_val = info_val + "<a href=\"?pat=file&ver=" + ver + "&pro=" + pro + "&filename=" + uuid + ".txt.ndk.info \">" + uuid + ".ndk" + "</a><br>"
+			info_val := "<a href=\"/file/" + pro + "/" + ver + "/" + uuid + ".tar.bz2 \">" + uuid + ".tar.bz2" + "</a><br>"
 			info_val = info_val + "<a href=\"?pat=detail&ver=" + ver + "&pro=" + pro + "&id=" + id_val + " \">" + "more..." + "</a><br>"
 
 			color := ""
@@ -203,9 +201,7 @@ func GetFileListInfoDB(pro string, ver string, id string) string {
 			uuid := strings.Split(filelist_val, " ")
 
 			for _, v := range uuid {
-				info_val = info_val + "<a href=\"?pat=file&ver=" + ver + "&pro=" + pro + "&filename=" + v + ".log \">" + v + ".log" + "</a><br>"
-				info_val = info_val + "<a href=\"?pat=file&ver=" + ver + "&pro=" + pro + "&filename=" + v + ".txt.info \">" + v + ".info" + "</a><br>"
-				info_val = info_val + "<a href=\"?pat=file&ver=" + ver + "&pro=" + pro + "&filename=" + v + ".txt.ndk.info \">" + v + ".ndk" + "</a><br>"
+				info_val = info_val + "<a href=\"/file/" + pro + "/" + ver + "/" + v + ".tar.bz2 \">" + v + ".tar.bz2" + "</a><br>"
 			}
 
 		}
