@@ -4,7 +4,6 @@ import (
   gozd "bitbucket.org/PinIdea/zero-downtime-daemon"
   "bitbucket.org/reckhou/DoomAnalysis/src/dbinfo"
   "bitbucket.org/reckhou/DoomAnalysis/src/dumpfile"
-  //"bitbucket.org/reckhou/DoomAnalysis/src/file"
   "crypto/md5"
   "encoding/hex"
   "fmt"
@@ -30,7 +29,6 @@ func handleListners(cl chan net.Listener) {
 }
 
 func Start() {
-
   ctx := gozd.Context{
     Hash:    "pin_dump",
     Logfile: os.TempDir() + "/pin_dump.log",
@@ -67,7 +65,9 @@ func Start() {
     }
   }
 
-  //log.Println(s.ListenAndServe())
+  dbinfo.Init()
+
+  go dbinfo.Check_Sql_Connect()
 }
 
 func (s HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {

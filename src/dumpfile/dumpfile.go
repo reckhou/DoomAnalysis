@@ -335,11 +335,9 @@ func (info *DumpFileInfo) GenDbInfo() {
 
     }
   }
-
   //db.CreateDB(info.project, info.info_["version"], info_key, info_str, info.info_["UUID"])
   mysql_c, db_err := dbinfo.Init()
   if db_err == nil {
-    defer mysql_c.Close()
     mysql_c.CreateDB(info.project, info.info_["version"], info_key, info_str, info.info_["UUID"], info.lianyun)
   }
 }

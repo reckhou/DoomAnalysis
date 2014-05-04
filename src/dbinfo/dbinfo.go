@@ -7,33 +7,51 @@ import (
   "os/exec"
   "strconv"
   "strings"
+  "time"
 )
 
 type DumpMysql struct {
   db *sql.DB
 }
 
+var sql_instance *DumpMysql
+var check_sql bool
+
 /* 初始化数据库引擎 */
 func Init() (*DumpMysql, error) {
-  test := new(DumpMysql)
-  db, err := sql.Open("mysql", "crash:crash2014@tcp(rdsiznueuzzvezb.mysql.rds.aliyuncs.com:3306)/crash?charset=utf8")
+  if sql_instance == nil {
+    sql_instance = new(DumpMysql)
+    db, err := sql.Open("mysql", "crash:crash2014@tcp(rdsiznueuzzvezb.mysql.rds.aliyuncs.com:3306)/crash?charset=utf8")
 
-  if err != nil {
-    log.Println("database initialize error : ", err.Error())
-    return nil, err
+    if err != nil {
+      log.Println("database initialize error : ", err.Error())
+      return nil, err
+    }
+    sql_instance.db = db
+    sql_instance.db.SetMaxIdleConns(10)
+    check_sql = true
   }
-  test.db = db
-  return test, nil
+
+  return sql_instance, nil
+}
+
+func Check_Sql_Connect() {
+  for check_sql {
+    test, _ := Init()
+    if test.db != nil {
+      test.db.Ping()
+    }
+    time.Sleep(1000 * 60 * time.Millisecond)
+  }
 }
 
 /* 关闭数据库 */
 func (test *DumpMysql) Close() {
-
   if test.db == nil {
     return
   }
+  check_sql = false
   test.db.Close()
-
 }
 
 func (test *DumpMysql) CreateDB(pro string, ver string, address string, info string, uuid string, lianyun string) {
@@ -91,12 +109,10 @@ func (test *DumpMysql) CreateDB(pro string, ver string, address string, info str
 }
 
 func GetListInfoDB(pro string, ver string) string {
-
   test, _ := Init()
   if test.db == nil {
     return ""
   }
-  defer test.db.Close()
 
   // 计算 count 总数
   dump_count := 0
@@ -173,7 +189,6 @@ func GetListInfoDB(pro string, ver string) string {
 
   return_val = return_val + "</table>\n</body>\n</html>"
   return return_val
-
 }
 
 func GetFileListInfoDB(pro string, ver string, id string) string {
@@ -182,7 +197,6 @@ func GetFileListInfoDB(pro string, ver string, id string) string {
   if test.db == nil {
     return ""
   }
-  defer test.db.Close()
 
   // 输出
   select_sql := "select filelist from " + pro + " where id =" + id
@@ -208,7 +222,6 @@ func GetFileListInfoDB(pro string, ver string, id string) string {
   }
   info_val = info_val + "</body>\n</html>"
   return info_val
-
 }
 
 func DeleteInfoDB(pro string, ver string) {
@@ -216,7 +229,6 @@ func DeleteInfoDB(pro string, ver string) {
   if test.db == nil {
     return
   }
-  defer test.db.Close()
 
   stmt, err := test.db.Prepare("delete from " + pro + " where version=?")
   if err != nil {
@@ -236,7 +248,6 @@ func VerInfoDB(pro string) string {
   if test.db == nil {
     return ""
   }
-  defer test.db.Close()
 
   rows, err := test.db.Query("SELECT DISTINCT version FROM " + pro)
   defer rows.Close()
