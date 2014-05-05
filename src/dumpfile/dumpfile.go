@@ -1,7 +1,6 @@
 package dumpfile
 
 import (
-  //"bitbucket.org/reckhou/DoomAnalysis/src/db"
   "bitbucket.org/reckhou/DoomAnalysis/src/dbinfo"
   "bitbucket.org/reckhou/DoomAnalysis/src/file"
   "encoding/binary"
@@ -114,7 +113,7 @@ func (info *DumpFileInfo) GenSym() bool {
   lib_name := "./" + info.project + "/lib/" + info.info_["version"] + "_libgame.so"
   result = file.IsFileExists(lib_name)
   if result {
-    cmd := exec.Command("/bin/sh", "gensym.sh", info.info_["version"], info.project)
+    cmd := exec.Command("/bin/sh", "gensym.sh", info.info_["version"], info.project, info.lianyun)
     _, err := cmd.Output()
     if err != nil {
       log.Println("GenSym err:" + err.Error())
@@ -394,7 +393,7 @@ func ListFileName(path string, ver string, pro string, lianyun string) {
     file_list := strings.Split(name, ".")
     filename := file_list[0]
 
-    if len(file_list) >= 3 && file_list[2] == "info" {
+    if len(file_list) <= 2 && file_list[1] == "txt" {
       var info DumpFileInfo
       info.block_in = false
       info.project = pro
