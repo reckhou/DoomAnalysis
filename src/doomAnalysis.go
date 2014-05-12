@@ -5,13 +5,16 @@ import (
 	"bitbucket.org/reckhou/DoomAnalysis/src/dbinfo"
 	"bitbucket.org/reckhou/DoomAnalysis/src/debug"
 	"bitbucket.org/reckhou/DoomAnalysis/src/dumpfile"
+	"bitbucket.org/reckhou/DoomAnalysis/src/file"
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"syscall"
@@ -72,6 +75,19 @@ func Start() {
 	go debug.CheckMemStats()
 }
 
+func getUrlParameter(key string, form url.Values) (string, bool) {
+
+	value_array := form[key]
+	if len(value_array) < 0 {
+		log.Println("getUrlParameter error : ", key)
+		return "", false
+	}
+
+	pat := form[key][0]
+
+	return pat, true
+}
+
 func (s HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	r.ParseForm()
@@ -95,21 +111,15 @@ func (s HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// 新版参数解析
 	if len(r.Form) >= 2 {
-		pat_array := r.Form["pat"]
-		if len(pat_array) < 0 {
-			log.Println("url error")
+		pat, result_pat := getUrlParameter("pat", r.Form)
+		if !result_pat {
 			return
 		}
 
-		pat := r.Form["pat"][0]
-
-		pro_array := r.Form["pro"][0]
-		if len(pro_array) < 0 {
-			log.Println("url error")
+		pro, result_pro := getUrlParameter("pro", r.Form)
+		if !result_pro {
 			return
 		}
-
-		pro := r.Form["pro"][0]
 
 		if pat == "get" {
 			ver_array := r.Form["ver"]
@@ -121,13 +131,10 @@ func (s HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		} else if pat == "post" {
 
-			lianyun_array := r.Form["lianyun"]
-
-			if len(lianyun_array) < 0 {
-				log.Println("lianyun error")
+			lianyun, result_lianyun := getUrlParameter("lianyun", r.Form)
+			if !result_lianyun {
 				return
 			}
-			lianyun := r.Form["lianyun"][0]
 
 			reqContent, err := ioutil.ReadAll(r.Body)
 			if err != nil {
@@ -137,49 +144,41 @@ func (s HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				log.Println("empty body!")
 				return
 			}
-
 			result := CheckLegal(string(reqContent))
 			if result {
-				go dumpfile.ProcessDumpFile(pro, reqContent, lianyun)
+				proname := GetProName(pro, lianyun)
+				go dumpfile.ProcessDumpFile(proname, reqContent, lianyun)
 			} else {
 				log.Println("error check md5 :", r.Form)
 			}
 		} else if pat == "recreate" {
-			ver_array := r.Form["ver"]
 
-			if len(ver_array) < 0 {
-				log.Println("url error")
+			ver, result_ver := getUrlParameter("ver", r.Form)
+			if !result_ver {
 				return
 			}
-			ver := r.Form["ver"][0]
 
-			lianyun_array := r.Form["lianyun"]
-
-			if len(lianyun_array) < 0 {
-				log.Println("lianyun error")
+			lianyun, result_lianyun := getUrlParameter("lianyun", r.Form)
+			if !result_lianyun {
 				return
 			}
-			lianyun := r.Form["lianyun"][0]
 
-			path := "./" + pro + "/dump/" + ver + "/"
+			proname := GetProName(pro, lianyun)
+			path := "./" + proname + "/dump/" + ver + "/"
 
 			go dumpfile.ListFileName(path, ver, pro, lianyun)
+
 		} else if pat == "detail" {
-			id_array := r.Form["id"]
 
-			if len(id_array) < 0 {
-				log.Println("url error")
+			id, result_id := getUrlParameter("id", r.Form)
+			if !result_id {
 				return
 			}
-			id := r.Form["id"][0]
 
-			ver_array := r.Form["ver"]
-
-			if len(ver_array) < 0 {
-				log.Println("url error")
+			ver, result_ver := getUrlParameter("ver", r.Form)
+			if !result_ver {
 				return
 			}
-			ver := r.Form["ver"][0]
 
 			fmt.Fprintf(w, dbinfo.GetFileListInfoDB(pro, ver, id))
 		}
@@ -232,14 +231,21 @@ func CheckLegal(s string) bool {
 	}
 
 	md5_str := s[4 : index-1]
+	if s[0:4] == "java" {
+		md5_str = s[5 : index-1]
+	}
+
 	check_str := s[index:check_str_len]
 	h := md5.New()
 	h.Write([]byte(check_str))
 	result_str := hex.EncodeToString(h.Sum(nil))
-
 	if md5_str == result_str {
 
 		if s[0:3] == "LOG" {
+			return true
+		}
+
+		if s[0:4] == "java" {
 			return true
 		}
 
@@ -251,4 +257,38 @@ func CheckLegal(s string) bool {
 	}
 
 	return false
+}
+
+func GetProName(pro string, lianyun string) string {
+	b := file.ReadFile("./config")
+	var f interface{}
+	err := json.Unmarshal(b, &f)
+	if err != nil {
+		log.Println(err)
+		return pro
+	}
+	m := f.(map[string]interface{})
+
+	for k, v := range m {
+		switch vv := v.(type) {
+		case map[string]interface{}:
+			if k == pro {
+				for i, u := range vv {
+					switch value := u.(type) {
+					case string:
+						if i == lianyun {
+							return value
+						}
+					default:
+						log.Println(value, "is of a type I don't know how to handle ")
+					}
+
+				}
+			}
+
+		default:
+			log.Println(k, "is of a type I don't know how to handle ")
+		}
+	}
+	return pro
 }

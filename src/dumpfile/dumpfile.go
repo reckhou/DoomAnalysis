@@ -3,6 +3,7 @@ package dumpfile
 import (
   "bitbucket.org/reckhou/DoomAnalysis/src/dbinfo"
   "bitbucket.org/reckhou/DoomAnalysis/src/file"
+  "bitbucket.org/reckhou/DoomAnalysis/src/javainfo"
   "encoding/binary"
   "encoding/hex"
   "log"
@@ -19,6 +20,9 @@ var key_arr [6]string = [...]string{"MD5", "UUID", "device", "version", "product
 
 // 上传的log文件行
 var key_arr_log [6]string = [...]string{"LOG", "UUID", "device", "version", "product_name", "file"}
+
+// 上传的JAVA文件行
+var key_arr_java [6]string = [...]string{"JAVA", "UUID", "device", "version", "product_name", "file"}
 
 type DumpFileInfo struct {
   info_          map[string]string
@@ -61,7 +65,6 @@ func (info *DumpFileInfo) GenInfo(s string) {
 
   path := "./" + info.project + "/dump/" + info.info_["version"]
   file.CreateDir(path)
-  //info.file_name_ = "crash_" + info.info_["UUID"] + "_" + time.Now().Format(time.RFC3339) + ".txt"
   info.file_name_ = info.info_["UUID"] + ".txt"
   file.WriteFile(path+"/"+info.file_name_, []byte(info.info_["file"]), os.O_TRUNC)
 
@@ -350,10 +353,41 @@ func (info *DumpFileInfo) GenTar(mode string) {
   }
 }
 
+func (info *DumpFileInfo) GenJavaInfo(s string) {
+  info.info_ = make(map[string]string)
+  line_num := 0
+  start_index := 0
+  context_start_index := 0
+  for i := 0; i < len(s); i++ {
+    if s[i] == '\n' {
+      if start_index > 0 {
+        start_index++
+      }
+      context_start_index = start_index + len(key_arr_java[line_num]) + 1
+
+      if line_num == 5 {
+        info.info_[key_arr_java[line_num]] = s[start_index:]
+      } else {
+        info.info_[key_arr_java[line_num]] = s[context_start_index:i]
+      }
+
+      start_index = i
+      line_num++
+      if line_num >= len(key_arr_java) {
+        break
+      }
+    }
+  }
+
+  path := "./" + info.project + "/java/" + info.info_["version"]
+  file.CreateDir(path)
+  //info.file_name_ = "crash_" + info.info_["UUID"] + "_" + time.Now().Format(time.RFC3339) + ".txt"
+  info.file_name_ = info.info_["UUID"] + ".java"
+  file.WriteFile(path+"/"+info.file_name_, []byte(info.info_["file"]), os.O_TRUNC)
+}
+
 func ProcessDumpFile(project string, co []byte, lianyun string) {
 
-  //context := file.ReadFile("./a.txt")
-  //s := string(context)
   s := string(co)
 
   var info DumpFileInfo
@@ -363,6 +397,15 @@ func ProcessDumpFile(project string, co []byte, lianyun string) {
 
   if s[0:3] == "LOG" {
     info.GenLogInfo(s)
+  } else if s[0:4] == "java" {
+
+    var javainfo_obj javainfo.JavaFileInfo
+    pro := project + "_java"
+    javainfo_obj.SetProjectInfo(pro, lianyun)
+    javainfo_obj.GenJavaInfo(s)
+    javainfo_obj.GenJavaDBInfo()
+    javainfo_obj.GenTar("c")
+
   } else {
     info.GenInfo(s)
     result := info.GenSym()
