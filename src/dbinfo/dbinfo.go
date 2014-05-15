@@ -3,6 +3,7 @@ package dbinfo
 import (
   "database/sql"
   _ "github.com/go-sql-driver/mysql"
+  "github.com/reckhou/goCfgMgr"
   "log"
   "os/exec"
   "strconv"
@@ -21,7 +22,16 @@ var check_sql bool
 func Init() (*DumpMysql, error) {
   if sql_instance == nil {
     sql_instance = new(DumpMysql)
-    db, err := sql.Open("mysql", "crash:crash2014@tcp(rdsiznueuzzvezb.mysql.rds.aliyuncs.com:3306)/crash?charset=utf8")
+
+    mysql_port := goCfgMgr.Get("mysql", "Port").(string)
+    mysql_host := goCfgMgr.Get("mysql", "Host").(string)
+    mysql_user := goCfgMgr.Get("mysql", "User").(string)
+    mysql_password := goCfgMgr.Get("mysql", "PassWord").(string)
+    mysql_db := goCfgMgr.Get("mysql", "DataBase").(string)
+
+    open_str := mysql_user + ":" + mysql_password + "@tcp(" + mysql_host + mysql_port + ")/" + mysql_db + "?charset=utf8"
+
+    db, err := sql.Open("mysql", open_str)
 
     if err != nil {
       log.Println("database initialize error : ", err.Error())
