@@ -340,7 +340,7 @@ func (info *DumpFileInfo) GenDbInfo() {
   //db.CreateDB(info.project, info.info_["version"], info_key, info_str, info.info_["UUID"])
   mysql_c, db_err := dbinfo.Init()
   if db_err == nil {
-    mysql_c.CreateDB(info.project, info.info_["version"], info_key, info_str, info.info_["UUID"], info.lianyun)
+    mysql_c.AddInfo(info.project, info.info_["version"], info_key, info_str, info.info_["UUID"], info.lianyun)
   }
 }
 
@@ -421,7 +421,7 @@ func ProcessDumpFile(project string, co []byte, lianyun string) {
 }
 
 func ListFileName(path string, ver string, pro string, lianyun string) {
-  dbinfo.DeleteInfoDB(pro, ver)
+  dbinfo.DeleteInfo(pro, ver)
   fullPath, _ := filepath.Abs(path)
   log.Println("ListFileName: ", fullPath)
   filepath.Walk(fullPath, func(path string, fi os.FileInfo, err error) error {

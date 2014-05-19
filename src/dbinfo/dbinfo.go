@@ -64,7 +64,7 @@ func (test *DumpMysql) Close() {
   test.db.Close()
 }
 
-func (test *DumpMysql) CreateDB(pro string, ver string, address string, info string, uuid string, lianyun string) {
+func (test *DumpMysql) AddInfo(pro string, ver string, address string, info string, uuid string, lianyun string) {
 
   if test.db == nil {
     return
@@ -118,7 +118,7 @@ func (test *DumpMysql) CreateDB(pro string, ver string, address string, info str
 
 }
 
-func GetListInfoDB(pro string, ver string) string {
+func GetDumpList(pro string, ver string) string {
   test, _ := Init()
   if test.db == nil {
     return ""
@@ -201,7 +201,7 @@ func GetListInfoDB(pro string, ver string) string {
   return return_val
 }
 
-func GetFileListInfoDB(pro string, ver string, id string) string {
+func GetDumpFileList(pro string, ver string, id string) string {
 
   test, _ := Init()
   if test.db == nil {
@@ -234,7 +234,7 @@ func GetFileListInfoDB(pro string, ver string, id string) string {
   return info_val
 }
 
-func DeleteInfoDB(pro string, ver string) {
+func DeleteInfo(pro string, ver string) {
   test, _ := Init()
   if test.db == nil {
     return
@@ -253,7 +253,7 @@ func DeleteInfoDB(pro string, ver string) {
   }
 }
 
-func VerInfoDB(pro string) string {
+func GerVersionList(pro string) string {
   test, _ := Init()
   if test.db == nil {
     return ""

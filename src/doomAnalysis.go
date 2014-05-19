@@ -126,10 +126,10 @@ func (s HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     if pat == "get" {
       ver_array := r.Form["ver"]
       if len(ver_array) <= 0 {
-        fmt.Fprintf(w, dbinfo.VerInfoDB(pro))
+        fmt.Fprintf(w, dbinfo.GerVersionList(pro))
       } else {
         ver := r.Form["ver"][0]
-        fmt.Fprintf(w, dbinfo.GetListInfoDB(pro, ver))
+        fmt.Fprintf(w, dbinfo.GetDumpList(pro, ver))
       }
     } else if pat == "post" {
 
@@ -182,7 +182,7 @@ func (s HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         return
       }
 
-      fmt.Fprintf(w, dbinfo.GetFileListInfoDB(pro, ver, id))
+      fmt.Fprintf(w, dbinfo.GetDumpFileList(pro, ver, id))
     }
 
   }

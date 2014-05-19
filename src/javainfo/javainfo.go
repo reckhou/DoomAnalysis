@@ -94,7 +94,7 @@ func (info *JavaFileInfo) GenJavaDBInfo() {
 
   mysql_c, db_err := dbinfo.Init()
   if db_err == nil {
-    mysql_c.CreateDB(info.project, info.info_["version"], result_str, context, info.info_["UUID"], info.lianyun)
+    mysql_c.AddInfo(info.project, info.info_["version"], result_str, context, info.info_["UUID"], info.lianyun)
   }
 }
 
