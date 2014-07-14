@@ -29,7 +29,7 @@ func Init() (*DumpMysql, error) {
     mysql_password := goCfgMgr.Get("mysql", "PassWord").(string)
     mysql_db := goCfgMgr.Get("mysql", "DataBase").(string)
 
-    open_str := mysql_user + ":" + mysql_password + "@tcp(" + mysql_host + mysql_port + ")/" + mysql_db + "?charset=utf8"
+    open_str := mysql_user + ":" + mysql_password + "@tcp(" + mysql_host + ":" + mysql_port + ")/" + mysql_db + "?charset=utf8"
 
     db, err := sql.Open("mysql", open_str)
 
@@ -182,7 +182,7 @@ func GetDumpList(pro string, ver string) string {
       info_val = info_val + "<a href=\"?pat=detail&ver=" + ver + "&pro=" + pro + "&id=" + id_val + " \">" + "more..." + "</a><br>"
 
       color := ""
-      if percent > 0.5 {
+      if index_val <= 10 {
         color = " style=\"color:#F00\" "
       }
 

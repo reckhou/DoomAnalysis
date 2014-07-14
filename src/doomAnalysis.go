@@ -32,7 +32,7 @@ func handleListners(cl chan net.Listener) {
 }
 
 func Start() {
-  server_address := goCfgMgr.Get("basic", "Host").(string) +
+  server_address := goCfgMgr.Get("basic", "Host").(string) + ":" +
     goCfgMgr.Get("basic", "Port").(string)
 
   ctx := gozd.Context{
@@ -237,6 +237,10 @@ func CheckLegal(s string) bool {
     md5_str = s[5 : index-1]
   }
 
+  if s[0:2] == "js" {
+    md5_str = s[3 : index-1]
+  }
+
   check_str := s[index:check_str_len]
   h := md5.New()
   h.Write([]byte(check_str))
@@ -248,6 +252,10 @@ func CheckLegal(s string) bool {
     }
 
     if s[0:4] == "java" {
+      return true
+    }
+
+    if s[0:2] == "js" {
       return true
     }
 
