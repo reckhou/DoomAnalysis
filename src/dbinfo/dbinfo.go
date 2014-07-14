@@ -118,6 +118,30 @@ func (test *DumpMysql) AddInfo(pro string, ver string, address string, info stri
 
 }
 
+func (test *DumpMysql) AddDeviceInfo(pro string, ver string, address string, device string, lianyun string) {
+
+  if test.db == nil {
+    return
+  }
+
+  if len(address) <= 0 {
+    address = "No Address in libgame.so"
+  }
+
+  stmt, err := test.db.Prepare("insert into " + pro + "_device(address,version,device,lianyun)values(?,?,?,?)")
+  if err != nil {
+    log.Println("Prepare :", err.Error())
+    return
+  }
+  defer stmt.Close()
+  _, err = stmt.Exec([]byte(address), []byte(ver), 1, []byte(device), []byte(lianyun))
+  if err != nil {
+    log.Println(err.Error())
+    return
+  }
+
+}
+
 func GetDumpList(pro string, ver string) string {
   test, _ := Init()
   if test.db == nil {
