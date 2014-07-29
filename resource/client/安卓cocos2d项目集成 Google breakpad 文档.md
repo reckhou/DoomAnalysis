@@ -155,8 +155,14 @@
 	            **注意: 客户端编译时需添加 -g 参数,生成调试信息**
 
         + JAVA : 将 CrashHandler.java MultipartHttpEntity.java PIDefaultExceptionHandler.java 到cocos2d安卓项目中去 在项目入口的 Activity 的 onCreate 函数第一行调用 CrashHandler Init 方法
+        CrashHandler 的构造函数里要去设置 mSubmitUrl 变量设置要上传的url
+        url如下:
 			```
-			  CrashHandler.init(this,"要上传的url"); // 注册 native 和 js crash
+			  要上传的url = http://ip:port/?pat=post&pro=项目名&lianyun=
+			```
+			
+			```
+			  CrashHandler.init(); // 注册 native 和 js crash
 			  PIDefaultExceptionHandler defaultExceptionHandler = new PIDefaultExceptionHandler();
     defaultExceptionHandler.init(this); // 注册JAVA crash
             ```
