@@ -177,6 +177,26 @@ public void UploadDumpFile(); // 将dump文件上传, 需要手动调用
 CrashHandler.getInstance().UploadDumpFile();
 来上传文件
 
+
+数据格式
+第一行根据上传文件的类型选择不同的名字(大小写敏感)
+```
+[MD5|LOG|java|js]:(计算第二行 UUID 到第五行 product_name: 内容的md5值 (包含回车))
+UUID:....\n
+device:....\n
+version:....\n
+product_name:....\n
+file:(dump的具体信息)
+```
+```
+例如上传java dump信息
+java:asjdhqwueyas123123
+UUID:....\n
+device:....\n
+version:....\n
+product_name:....\n
+file:(dump的具体信息)
+```
 - - -
 ###配置结束
 - - -
