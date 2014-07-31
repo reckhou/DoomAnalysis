@@ -193,10 +193,10 @@ CrashHandler.getInstance().UploadDumpFile();
 
 ```
 [MD5|LOG|java|js]:(计算第二行 UUID 到第五行 product_name: 内容的md5值 (包含回车))
-UUID:....\n
-device:....\n
-version:....\n
-product_name:....\n
+UUID:当前设备唯一值(可以根据 imei+DEVICE_ID+ANDROID_ID+MacAddress 组成的字符串来计算md5值)\n
+device:当前设备名称\n
+version:程序版本号\n
+product_name:程序名称\n
 file:(dump的具体信息)
 ```
 ```
