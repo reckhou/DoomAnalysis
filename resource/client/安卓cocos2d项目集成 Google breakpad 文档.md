@@ -179,7 +179,18 @@ CrashHandler.getInstance().UploadDumpFile();
 
 
 数据格式
-第一行根据上传文件的类型选择不同的名字(大小写敏感)
+
+第一行根据上传文件的类型选择不同的参数名称(大小写敏感)
+
+支持的文件类型：
+
+    MD5: C++部分crash dump
+    java: Java部分crash dump
+    js: js部分异常
+    LOG: log信息，不做处理
+    
+其值为第2-4行内容首位相接后取MD5值，包括换行符。
+
 ```
 [MD5|LOG|java|js]:(计算第二行 UUID 到第五行 product_name: 内容的md5值 (包含回车))
 UUID:....\n
@@ -190,7 +201,7 @@ file:(dump的具体信息)
 ```
 ```
 例如上传java dump信息
-java:asjdhqwueyas123123
+java:<MD5 Vale>\n
 UUID:....\n
 device:....\n
 version:....\n
