@@ -171,14 +171,21 @@
     在 CrashHandler.java 里
 ```
 private void saveFile(String dumpFile); // 将生成的dump和日志转存到一个固定文件下,便于上传,客户端产生dump时会自动调用
-public void UploadDumpFile(); // 将dump文件上传, 需要手动调用
-```
-需要手工调用
-CrashHandler.getInstance().UploadDumpFile();
-来上传文件
+public void UploadDumpFile(); // 将dump文件上传
+
+```需要手工调用`CrashHandler.getInstance().UploadDumpFile()`来上传文件.
 
 
-数据格式
+###可能遗漏的步骤
+
+1. `ndk build`时，需要加上`NDK_DEBUG=1`编译选项。
+2. 在项目的`AndroidManifest.xml`中，`application`项下加入`android:debuggable="true"`。
+3. 在`Application.mk`中的`APP_CPPFLAGS`和`APP_LDFLAGS`下分别加入`-g`。
+
+遗漏以上步骤，会导致编译出的`.so`文件缺少`.debug_info`信息，使得`dump_syms`无法正常分析。
+
+
+###数据格式
 
 第一行根据上传文件的类型选择不同的参数名称(大小写敏感)
 
@@ -262,4 +269,4 @@ file:(dump的具体信息)
 			返回到第三步建立的那个文件夹的根部，执行
 			>**./minidump_stackwalk XXX.dmp symbols/ > XXX.txt**
 
-            查看新文件 XXX.txt 里面就有崩溃文本信
+            查看新文件 XXX.txt 里面就有崩溃文本信息。
