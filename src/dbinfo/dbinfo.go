@@ -71,13 +71,13 @@ func (test *DumpMysql) AddInfo(pro string, ver string, address string, info stri
   }
 
   if len(address) <= 0 {
-    address = "No Address in libgame.so"
+    address = "No Address in so"
   }
 
-  select_sql := "select count,ndk,filelist from " + pro + " where address ='" + address + "' and version =" + ver
+  select_sql := "select count,ndk,filelist from " + pro + " where address ='" + address + "' and version ='" + ver + "'"
   rows, err := test.db.Query(select_sql)
   if err != nil {
-    log.Println(err.Error())
+    log.Println("select " + err.Error())
     return
   }
   defer rows.Close()
@@ -109,10 +109,13 @@ func (test *DumpMysql) AddInfo(pro string, ver string, address string, info stri
     log.Println("Prepare :", err.Error())
     return
   }
+  if lianyun == "" {
+    lianyun = pro
+  }
   defer stmt.Close()
   _, err = stmt.Exec([]byte(address), []byte(ver), 1, []byte(info), []byte(uuid), []byte(lianyun))
   if err != nil {
-    log.Println(err.Error())
+    log.Println("insert \n" + err.Error())
     return
   }
 
@@ -125,7 +128,7 @@ func (test *DumpMysql) AddDeviceInfo(pro string, ver string, address string, dev
   }
 
   if len(address) <= 0 {
-    address = "No Address in libgame.so"
+    address = "No Address in so"
   }
 
   stmt, err := test.db.Prepare("insert into " + pro + "_device(address,version,device,lianyun)values(?,?,?,?)")
@@ -133,8 +136,11 @@ func (test *DumpMysql) AddDeviceInfo(pro string, ver string, address string, dev
     log.Println("Prepare :", err.Error())
     return
   }
+  if lianyun == "" {
+    lianyun = pro
+  }
   defer stmt.Close()
-  _, err = stmt.Exec([]byte(address), []byte(ver), 1, []byte(device), []byte(lianyun))
+  _, err = stmt.Exec([]byte(address), []byte(ver), []byte(device), []byte(lianyun))
   if err != nil {
     log.Println(err.Error())
     return
@@ -150,7 +156,7 @@ func GetDumpList(pro string, ver string) string {
 
   // 计算 count 总数
   dump_count := 0
-  count_rows, err := test.db.Query("select sum(count),count(address) from " + pro + " where version =" + ver)
+  count_rows, err := test.db.Query("select sum(count),count(address) from " + pro + " where version ='" + ver + "'")
   defer count_rows.Close()
   if err != nil {
     log.Println(err.Error())
@@ -170,7 +176,7 @@ func GetDumpList(pro string, ver string) string {
   }
 
   // 排序输出
-  select_sql := "select id,address,count,ndk,filelist from " + pro + " where version =" + ver + " order by count desc"
+  select_sql := "select id,address,count,ndk,filelist from " + pro + " where version ='" + ver + "' order by count desc"
   select_rows, err := test.db.Query(select_sql)
   defer select_rows.Close()
   if err != nil {
@@ -283,24 +289,23 @@ func GerVersionList(pro string) string {
     return ""
   }
 
-  rows, err := test.db.Query("SELECT DISTINCT version FROM " + pro)
+  rows, err := test.db.Query("SELECT DISTINCT version FROM " + pro + " order by version desc")
   defer rows.Close()
   if err != nil {
     log.Println(err.Error())
     return ""
   }
 
-  var id int
+  var id string
 
   return_val := "<html>\n<body>\n"
   return_val += CheckFreedisk()
   for rows.Next() {
     if err := rows.Scan(&id); err == nil {
-      str1 := strconv.Itoa(id)
+      str1 := id
       return_val = return_val + "<a href=\"?pat=get&pro=" + pro + "&ver=" + str1 + "\">" + str1 + "</a><br>"
     }
   }
-
   return_val = return_val + "</body>\n</html>"
   return return_val
 }

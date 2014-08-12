@@ -5,6 +5,7 @@ import (
   "bitbucket.org/reckhou/DoomAnalysis/src/file"
   "encoding/binary"
   "encoding/hex"
+  "github.com/reckhou/goCfgMgr"
   "log"
   "os"
   "os/exec"
@@ -113,10 +114,10 @@ func (info *DumpFileInfo) GenSym() bool {
     return true
   }
 
-  lib_name := "./" + info.project + "/lib/" + info.info_["version"] + "_libgame.so"
+  lib_name := "./" + info.project + "/lib/" + info.info_["version"] + "_" + goCfgMgr.Get("libname", "inputname").(string)
   result = file.IsFileExists(lib_name)
   if result {
-    cmd := exec.Command("/bin/sh", "gensym.sh", info.info_["version"], info.project, info.lianyun)
+    cmd := exec.Command("/bin/sh", "gensym.sh", info.info_["version"], info.project, info.lianyun, goCfgMgr.Get("libname", "inputname").(string), goCfgMgr.Get("libname", "outputname").(string))
     _, err := cmd.Output()
     if err != nil {
       log.Println("GenSym err:" + err.Error())
@@ -171,7 +172,8 @@ func (info *DumpFileInfo) GenNdkDumpInfo() {
         }
 
         if open_lib_info {
-          matched, _ = regexp.MatchString("0x[0-9|a-f]{8}\\s-\\s0x[0-9|a-f]{8}\\s{2}libgame.so\\s{2}\\?{3}$", temp_str)
+          libname := goCfgMgr.Get("libname", "outputname").(string)
+          matched, _ = regexp.MatchString("0x[0-9|a-f]{8}\\s-\\s0x[0-9|a-f]{8}\\s{2}"+libname+"\\s{2}\\?{3}$", temp_str)
           if matched {
             //log.Println("regexp : ", temp_str)
             info.GenNdkSoAddress(temp_str)
@@ -259,8 +261,8 @@ func (info *DumpFileInfo) GenNdkfile() {
   03-24 15:34:32.361: I/DEBUG(130): Build fingerprint: '111'
   03-24 15:34:32.361: I/DEBUG(130): pid: 11142, tid: 11365, name: dfdsf  >>> sfsaf <<<
   03-24 15:34:32.794: I/DEBUG(130): backtrace:
-  03-24 15:34:32.794: I/DEBUG(130):     #00  pc 0069D08F  libgame.so ()
-  03-24 15:34:32.794: I/DEBUG(130):     #01  pc 5e4ade49  libgame.so ()
+  03-24 15:34:32.794: I/DEBUG(130):     #00  pc 0069D08F  libpishell.so ()
+  03-24 15:34:32.794: I/DEBUG(130):     #01  pc 5e4ade49  libpishell.so ()
   */
   max_info_count := 3
   info_key := ""
@@ -277,8 +279,13 @@ func (info *DumpFileInfo) GenNdkfile() {
     var buf = make([]byte, 4)
     binary.BigEndian.PutUint32(buf, uint32(address))
 
+    libname := info.stack_lib_name[i]
+    if libname == goCfgMgr.Get("libname", "outputname").(string) {
+      libname = goCfgMgr.Get("libname", "inputname").(string)
+    }
+
     if i < 10 {
-      result_str = "0" + strconv.Itoa(i) + "  pc " + hex.EncodeToString(buf) + "  " + info.info_["version"] + "_" + info.stack_lib_name[i] + " ()\n"
+      result_str = "0" + strconv.Itoa(i) + "  pc " + hex.EncodeToString(buf) + "  " + info.info_["version"] + "_" + libname + " ()\n"
       file_context += (stack_head + result_str)
     }
 
@@ -317,8 +324,8 @@ func (info *DumpFileInfo) GenDbInfo() {
         matched := re.FindString(temp_str)
 
         if matched != "" && address_info > 0 {
-
-          prostack_flag, _ := regexp.MatchString("libgame.so", temp_str)
+          libname := goCfgMgr.Get("libname", "inputname").(string)
+          prostack_flag, _ := regexp.MatchString(libname, temp_str)
           if prostack_flag {
             re = regexp.MustCompile("[0-9|a-f]{8}")
             key := re.FindString(matched)
@@ -347,6 +354,7 @@ func (info *DumpFileInfo) GenDbInfo() {
 
 func (info *DumpFileInfo) GenTar(mode string) {
   // info.info_["UUID"]
+  log.Println("GenTar err:" + info.info_["version"] + info.project + info.info_["UUID"] + mode)
   cmd := exec.Command("/bin/sh", "gen_tar.sh", info.info_["version"], info.project, info.info_["UUID"], mode)
   _, err := cmd.Output()
   if err != nil {

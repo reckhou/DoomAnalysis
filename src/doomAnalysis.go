@@ -90,12 +90,46 @@ func getUrlParameter(key string, form url.Values) (string, bool) {
   return pat, true
 }
 
+// target=API name or FileName want to download
+// project=folderSlice[1]
+func parseURL(url *url.URL) (params map[string]string) {
+
+  params = make(map[string]string)
+
+  paramStr := url.RawQuery
+  paramSlice := strings.Split(paramStr, "&")
+
+  for _, v := range paramSlice {
+    index := strings.LastIndex(v, "=")
+    var key, val string
+    if index >= 0 && index+1 < len(v) {
+      key = v[:index]
+      val = v[index+1:]
+    } else {
+      key = v
+      val = ""
+    }
+
+    params[key] = val
+  }
+
+  /*if debug.Enabled {
+    log.Println("Folders:\n", folderSlice)
+    log.Println("Target:\n", target)
+    log.Println("Params:\n", params)
+  }*/
+
+  return
+}
+
 func (s HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-  r.ParseForm()
+  //r.ParseForm()
   log.Println("Form:", r.Form)
   log.Println("Url", r.URL)
   log.Println("RequestURL", r.RequestURI)
+
+  params := parseURL(r.URL)
 
   url_list := strings.Split(r.RequestURI, "/")
 
@@ -111,34 +145,36 @@ func (s HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     }
   }
 
+  log.Println("params:", params)
   // 新版参数解析
-  if len(r.Form) >= 2 {
-    pat, result_pat := getUrlParameter("pat", r.Form)
-    if !result_pat {
+  if len(params) >= 2 {
+    pat := params["pat"]
+    if pat == "" {
       return
     }
 
-    pro, result_pro := getUrlParameter("pro", r.Form)
-    if !result_pro {
+    pro := params["pro"]
+    if pro == "" {
       return
     }
 
     if pat == "get" {
-      ver_array := r.Form["ver"]
-      if len(ver_array) <= 0 {
+      ver_array := params["ver"]
+      if ver_array == "" {
         fmt.Fprintf(w, dbinfo.GerVersionList(pro))
       } else {
-        ver := r.Form["ver"][0]
+        ver := params["ver"]
         fmt.Fprintf(w, dbinfo.GetDumpList(pro, ver))
       }
     } else if pat == "post" {
 
-      lianyun, result_lianyun := getUrlParameter("lianyun", r.Form)
-      if !result_lianyun {
-        return
+      lianyun := params["lianyun"]
+      if lianyun == "" {
+        lianyun = pro
       }
 
       reqContent, err := ioutil.ReadAll(r.Body)
+      //log.Println("reqContent ", string(reqContent))
       if err != nil {
         log.Println(err)
         return
@@ -155,13 +191,13 @@ func (s HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
       }
     } else if pat == "recreate" {
 
-      ver, result_ver := getUrlParameter("ver", r.Form)
-      if !result_ver {
+      ver := params["ver"]
+      if ver == "" {
         return
       }
 
-      lianyun, result_lianyun := getUrlParameter("lianyun", r.Form)
-      if !result_lianyun {
+      lianyun := params["lianyun"]
+      if lianyun == "" {
         return
       }
 
@@ -172,13 +208,13 @@ func (s HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
     } else if pat == "detail" {
 
-      id, result_id := getUrlParameter("id", r.Form)
-      if !result_id {
+      id := params["id"]
+      if id == "" {
         return
       }
 
-      ver, result_ver := getUrlParameter("ver", r.Form)
-      if !result_ver {
+      ver := params["ver"]
+      if ver == "" {
         return
       }
 
@@ -187,27 +223,27 @@ func (s HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
   }
 
-  if len(r.Form) == 1 {
-    val := r.Form["par"]
+  /*if len(r.Form) == 1 {
+  	val := r.Form["par"]
 
-    if len(val) > 0 && val[0] == "post" {
-      reqContent, err := ioutil.ReadAll(r.Body)
-      if err != nil {
-        log.Println(err)
-        return
-      } else if reqContent == nil || len(reqContent) < 1 {
-        log.Println("empty body!")
-        return
-      }
+  	if len(val) > 0 && val[0] == "post" {
+  		reqContent, err := ioutil.ReadAll(r.Body)
+  		if err != nil {
+  			log.Println(err)
+  			return
+  		} else if reqContent == nil || len(reqContent) < 1 {
+  			log.Println("empty body!")
+  			return
+  		}
 
-      result := CheckLegal(string(reqContent))
-      if result {
-        go dumpfile.ProcessDumpFile("sxda", reqContent, "sxda")
-      } else {
-        log.Println("error check md5 :", r.Form)
-      }
-    }
-  }
+  		result := CheckLegal(string(reqContent))
+  		if result {
+  			go dumpfile.ProcessDumpFile("sxda", reqContent, "sxda")
+  		} else {
+  			log.Println("error check md5 :", r.Form)
+  		}
+  	}
+  }*/
 
 }
 
@@ -270,7 +306,7 @@ func CheckLegal(s string) bool {
 }
 
 func GetProName(pro string, lianyun string) string {
-
+  log.Println("GetProName:", pro)
   pro_list := goCfgMgr.Get("project", pro).(map[string]interface{})
 
   for i, u := range pro_list {

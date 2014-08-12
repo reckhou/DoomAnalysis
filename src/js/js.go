@@ -10,6 +10,7 @@ import (
   "os"
   "os/exec"
   "regexp"
+  "time"
 )
 
 // 上传的JAVA文件行
@@ -53,9 +54,16 @@ func (info *JsFileInfo) GenJsInfo(s string) {
     }
   }
 
+  if info.info_["file"] == "" {
+    info.info_["file"] = s[start_index+len(key_arr_js[5])+2:]
+  }
+
   path := "./" + info.project + "/dump/" + info.info_["version"]
   file.CreateDir(path)
-  info.file_name_ = info.info_["UUID"] + ".java"
+  t := time.Now()
+  gen_time_str := fmt.Sprintf("%d", t.Unix())
+  info.info_["UUID"] = info.info_["UUID"] + "_" + gen_time_str
+  info.file_name_ = info.info_["UUID"] + ".txt"
   file.WriteFile(path+"/"+info.file_name_, []byte(info.info_["file"]), os.O_TRUNC)
 }
 
@@ -72,7 +80,7 @@ func (info *JsFileInfo) GenJsDBInfo() {
       if i-start_pos > 1 {
         temp_str := string(context[start_pos:i])
 
-        re := regexp.MustCompile("/[^/]+.js:[0-9]{1,99}")
+        re := regexp.MustCompile("@core/[^/]+.js:[0-9]{1,99}")
         matched := re.FindString(temp_str)
         if matched != "" {
           fmt.Println("matched : ", matched)
@@ -95,7 +103,7 @@ func (info *JsFileInfo) GenJsDBInfo() {
   mysql_c, db_err := dbinfo.Init()
   if db_err == nil {
     mysql_c.AddInfo(info.project, info.info_["version"], result_str, context, info.info_["UUID"], info.lianyun)
-    mysql_c.AddDeviceInfo(info.project, info.info_["version"], info_key, info.info_["device"], info.lianyun)
+    mysql_c.AddDeviceInfo(info.project[0:len(info.project)-3], info.info_["version"], info_key, info.info_["device"], info.lianyun)
   }
 }
 

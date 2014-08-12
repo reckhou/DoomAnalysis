@@ -6,12 +6,16 @@
   "mysql":{
     "Port": ":3306",
     "Host": "",
-    "User": “user”,
-    "PassWord": “1234”,
-    "DataBase": “database”
+    "User": "user",
+    "PassWord": "1234",
+    "DataBase": "database"
+  },
+  "libname": {
+    "inputname": "libgame.so",
+    "outputname": "libgame.so"
   },
   "project":{
-      “game”:{
+      "game":{
       "game_tr":"game_tr",
       "game_kr":"game_kr"
     }

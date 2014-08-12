@@ -53,9 +53,13 @@ func (info *JavaFileInfo) GenJavaInfo(s string) {
     }
   }
 
+  if info.info_["file"] == "" {
+    info.info_["file"] = s[start_index+len(key_arr_java[5])+2:]
+  }
+
   path := "./" + info.project + "/dump/" + info.info_["version"]
   file.CreateDir(path)
-  info.file_name_ = info.info_["UUID"] + ".java"
+  info.file_name_ = info.info_["UUID"] + ".txt"
   file.WriteFile(path+"/"+info.file_name_, []byte(info.info_["file"]), os.O_TRUNC)
 }
 
