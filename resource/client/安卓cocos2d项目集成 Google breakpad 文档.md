@@ -154,17 +154,36 @@
 						   
 	            **注意: 客户端编译时需添加 -g 参数,生成调试信息**
 
-        + JAVA : 将 CrashHandler.java MultipartHttpEntity.java PIDefaultExceptionHandler.java 到cocos2d安卓项目中去 在项目入口的 Activity 的 onCreate 函数第一行调用 CrashHandler Init 方法
-        CrashHandler 的构造函数里要去设置 mSubmitUrl 变量设置要上传的url
-        url如下:
+        + JAVA : 将 CrashHandler.java MultipartHttpEntity.java PIDefaultExceptionHandler.java 到cocos2d安卓项目中，项目入口的 Activity 中`onPostExecute`函数创建新线程进行初始化。
+        在`CrashHandler`的构造函数中更改`mSubmitUrl`设置上传服务器url地址。
+        上传服务器url地址格式:
 			```
 			  要上传的url = http://ip:port/?pat=post&pro=项目名&lianyun=
 			```
 			
 			```
-			  CrashHandler.init(); // 注册 native 和 js crash
-			  PIDefaultExceptionHandler defaultExceptionHandler = new PIDefaultExceptionHandler();
-    defaultExceptionHandler.init(this); // 注册JAVA crash
+			@Override
+		    protected void onPostExecute(String result) {
+			super.onPostExecute(result);
+			
+			Thread thread = new Thread()
+			{
+				@Override
+				public void run() {
+					try {	
+						CrashHandler.init(PIGAMEActivity.this); // 注册C++ crash
+						PIDefaultExceptionHandler defaultExceptionHandler = new PIDefaultExceptionHandler();
+						defaultExceptionHandler.init(PIGAMEActivity.this); // 注册JAVA crash
+						CrashHandler.getInstance().UploadDumpFile();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			};
+
+			thread.start();
+			}
+			
             ```
  4. 发送到服务端数据格式
 	原理:使用 java 的 HttpEntity post 到服务端
