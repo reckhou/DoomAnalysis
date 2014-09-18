@@ -121,7 +121,7 @@ func (test *DumpMysql) AddInfo(pro string, ver string, address string, info stri
 
 }
 
-func (test *DumpMysql) AddDeviceInfo(pro string, ver string, address string, device string, lianyun string) {
+func (test *DumpMysql) AddDeviceInfo(pro string, ver string, address string, device string, lianyun string, uuid string) {
 
   if test.db == nil {
     return
@@ -131,7 +131,7 @@ func (test *DumpMysql) AddDeviceInfo(pro string, ver string, address string, dev
     address = "No Address in so"
   }
 
-  stmt, err := test.db.Prepare("insert into " + pro + "_device(address,version,device,lianyun)values(?,?,?,?)")
+  stmt, err := test.db.Prepare("insert into " + pro + "_device(address,version,device,lianyun,uuid)values(?,?,?,?,?)")
   if err != nil {
     log.Println("Prepare :", err.Error())
     return
@@ -140,7 +140,7 @@ func (test *DumpMysql) AddDeviceInfo(pro string, ver string, address string, dev
     lianyun = pro
   }
   defer stmt.Close()
-  _, err = stmt.Exec([]byte(address), []byte(ver), []byte(device), []byte(lianyun))
+  _, err = stmt.Exec([]byte(address), []byte(ver), []byte(device), []byte(lianyun), []byte(uuid))
   if err != nil {
     log.Println(err.Error())
     return
@@ -215,6 +215,9 @@ func GetDumpList(pro string, ver string) string {
       if index_val <= 10 {
         color = " style=\"color:#F00\" "
       }
+
+      ndk_val = strings.Replace(ndk_val, "\n", "<br/>", -1)
+      ndk_val = strings.Replace(ndk_val, " ", "&nbsp", -1)
 
       return_val = return_val + "<tr>\n"
       return_val = return_val + "<th align=\"left\"><div " + color + ">" + id_val + "</div></th>\n"

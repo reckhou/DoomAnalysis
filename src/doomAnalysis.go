@@ -36,12 +36,12 @@ func Start() {
     goCfgMgr.Get("basic", "Port").(string)
 
   ctx := gozd.Context{
-    Hash:    "pin_dump",
-    Logfile: os.TempDir() + "/pin_dump.log",
+    Hash:    "pin_dump_test",
+    Logfile: os.TempDir() + "/pin_dump_test.log",
     Directives: map[string]gozd.Server{
       "sock": gozd.Server{
         Network: "unix",
-        Address: os.TempDir() + "/pin_dump.sock",
+        Address: os.TempDir() + "/pin_dump_test.sock",
       },
       "port1": gozd.Server{
         Network: "tcp",

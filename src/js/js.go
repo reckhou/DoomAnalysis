@@ -103,7 +103,7 @@ func (info *JsFileInfo) GenJsDBInfo() {
   mysql_c, db_err := dbinfo.Init()
   if db_err == nil {
     mysql_c.AddInfo(info.project, info.info_["version"], result_str, context, info.info_["UUID"], info.lianyun)
-    mysql_c.AddDeviceInfo(info.project[0:len(info.project)-3], info.info_["version"], info_key, info.info_["device"], info.lianyun)
+    mysql_c.AddDeviceInfo(info.project, info.info_["version"], info_key, info.info_["device"], info.lianyun, info.info_["UUID"])
   }
 }
 

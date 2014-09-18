@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-  os.Chdir("/data/dumpserver/")
+  os.Chdir("/data/pressureserver/")
   DoomAnalysis.Start()
 }
