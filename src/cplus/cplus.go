@@ -11,6 +11,7 @@ import (
   "os/exec"
   "regexp"
   "strconv"
+  "strings"
 )
 
 // 上传的dump文件行
@@ -109,15 +110,23 @@ func (info *DumpFileInfo) GenLogInfo(s string) {
 func (info *DumpFileInfo) GenSym() bool {
   // 查找是否有对应的 sym文件
 
-  result := file.IsFileExists("./" + info.project + "/lib/" + info.info_["version"] + ".txt")
+  version := info.info_["version"]
+
+  count := strings.Count(version, "_")
+  if count > 1 {
+    index := strings.Index(version, "_")
+    version = version[:index]
+  }
+
+  result := file.IsFileExists("./" + info.project + "/lib/" + version + ".txt")
   if result {
     return true
   }
 
-  lib_name := "./" + info.project + "/lib/" + info.info_["version"] + "_" + goCfgMgr.Get("libname", "inputname").(string)
+  lib_name := "./" + info.project + "/lib/" + version + "_" + goCfgMgr.Get("libname", "inputname").(string)
   result = file.IsFileExists(lib_name)
   if result {
-    cmd := exec.Command("/bin/sh", "gensym.sh", info.info_["version"], info.project, info.lianyun, goCfgMgr.Get("libname", "inputname").(string), goCfgMgr.Get("libname", "outputname").(string))
+    cmd := exec.Command("/bin/sh", "gensym.sh", version, info.project, info.lianyun, goCfgMgr.Get("libname", "inputname").(string), goCfgMgr.Get("libname", "outputname").(string))
     _, err := cmd.Output()
     if err != nil {
       log.Println("GenSym err:" + err.Error())
