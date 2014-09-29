@@ -122,7 +122,7 @@ func (info *DumpFileInfo) GenSym() bool {
     version = version[:index]
   }
 
-  result := file.IsFileExists("./" + info.project + "/lib/" + version + ".txt")
+  result := file.IsFileExists("./" + info.project + "/lib/" + info.info_["version"] + ".txt")
   if result {
     return true
   }
