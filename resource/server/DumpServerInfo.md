@@ -17,6 +17,13 @@ http://127.0.0.1:8888/?pat=get&pro=proname_js    // javascript版查看
 ( http://ip:port/?pat=recreate&pro=项目名&ver=版本号&lianyun=联运平台 ) 
 例如:
 http://127.0.0.1:8888/?pat=recreate&pro=proname&ver=1234&lianyun=lianyunname
+
+针对tencent dump的特殊处理
+首先将dump的zip包上传倒 服务器根目录(root)/${proname}/tencentdump/ 下
+然后通过访问
+http://127.0.0.1:8888/tencent 正确填写项目名和 版本号
+后台会自动读取  tencentdump 目录下所有的zip包 自动生成
+
 - - -
 ##服务器搭建
 ###1.配置目录
