@@ -1,11 +1,13 @@
 package main
 
 import (
+  "bitbucket.org/kardianos/osext"
   "bitbucket.org/reckhou/DoomAnalysis/src"
   "os"
 )
 
 func main() {
-  os.Chdir("/data/pressureserver/")
+  path, _ := osext.ExecutableFolder()
+  os.Chdir(path)
   DoomAnalysis.Start()
 }

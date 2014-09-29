@@ -8,10 +8,10 @@ OUTPUTLIBNAME=$5
 
 
 cd "./$PROJECTNAME/dump/$VERSION"
-cp "../../lib/${VERSION}"_"$INPUTLIBNAME" ./"$INPUTLIBNAME"
+cp "../../lib/${VERSION}"_"$INPUTLIBNAME" ./"$OUTPUTLIBNAME"
 
-../../../tools/dump_syms "$INPUTLIBNAME" > "$OUTPUTLIBNAME".sym
-rm -f "$INPUTLIBNAME"
+../../../tools/dump_syms "$OUTPUTLIBNAME" > "$OUTPUTLIBNAME".sym
+rm -f "$OUTPUTLIBNAME"
 
 cd "../../lib"
 touch "$VERSION".txt

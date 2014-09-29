@@ -47,6 +47,8 @@ func ProcessDumpFile(project string, co []byte, lianyun string) {
       info.GenDbInfo()
       // tar
       info.GenTar("c")
+    } else {
+      log.Println("c++ dump error: ", info.GetVersion())
     }
   }
 
@@ -70,6 +72,28 @@ func ListFileName(path string, ver string, pro string, lianyun string) {
 
     if len(file_list) <= 2 && file_list[1] == "txt" {
       cplus.RecreateDumpInfo(pro, lianyun, filename, ver, name)
+    }
+
+    return nil
+  })
+}
+
+func ListTencentFileName(path string, ver string, pro string, lianyun string) {
+  fullPath, _ := filepath.Abs(path)
+  log.Println("ListTencentFileName Path: ", fullPath)
+  filepath.Walk(fullPath, func(path string, fi os.FileInfo, err error) error {
+    if nil == fi {
+      return err
+    }
+    if fi.IsDir() {
+      return nil
+    }
+
+    name := fi.Name()
+    file_list := strings.Split(name, ".")
+    filename := file_list[0]
+    if len(file_list) <= 2 && file_list[1] == "zip" {
+      cplus.CreateTencentDumpInfo(pro, lianyun, filename, ver, name)
     }
 
     return nil

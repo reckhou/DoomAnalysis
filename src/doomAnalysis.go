@@ -5,6 +5,7 @@ import (
   "bitbucket.org/reckhou/DoomAnalysis/src/dbinfo"
   "bitbucket.org/reckhou/DoomAnalysis/src/debug"
   "bitbucket.org/reckhou/DoomAnalysis/src/dumpfile"
+  "bitbucket.org/reckhou/DoomAnalysis/src/file"
   "crypto/md5"
   "encoding/hex"
   "fmt"
@@ -142,6 +143,9 @@ func (s HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
       path := "./" + pro + "/dump/" + ver + "/" + file_name
       http.ServeFile(w, r, path)
       return
+    } else if url_list[1] == "tencent" {
+      context := file.ReadFile("./tencent_create.html")
+      fmt.Fprintf(w, string(context))
     }
   }
 
@@ -219,6 +223,24 @@ func (s HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
       }
 
       fmt.Fprintf(w, dbinfo.GetDumpFileList(pro, ver, id))
+
+    } else if pat == "create_tencent" {
+
+      ver := params["ver"]
+      if ver == "" {
+        return
+      }
+
+      lianyun := params["lianyun"]
+      if lianyun == "" {
+        return
+      }
+
+      proname := GetProName(pro, lianyun)
+      path := "./" + proname + "/tencentdump/"
+
+      go dumpfile.ListTencentFileName(path, ver, pro, lianyun)
+
     }
 
   }

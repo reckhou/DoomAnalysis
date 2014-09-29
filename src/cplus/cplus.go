@@ -32,6 +32,10 @@ type DumpFileInfo struct {
   lianyun        string
 }
 
+func (info *DumpFileInfo) GetVersion() string {
+  return info.info_["version"]
+}
+
 func (info *DumpFileInfo) InitData(project string, lianyun string) {
   info.block_in = false
   info.project = project
@@ -124,9 +128,10 @@ func (info *DumpFileInfo) GenSym() bool {
   }
 
   lib_name := "./" + info.project + "/lib/" + version + "_" + goCfgMgr.Get("libname", "inputname").(string)
+  log.Println("find lib_name :" + lib_name)
   result = file.IsFileExists(lib_name)
   if result {
-    cmd := exec.Command("/bin/sh", "gensym.sh", version, info.project, info.lianyun, goCfgMgr.Get("libname", "inputname").(string), goCfgMgr.Get("libname", "outputname").(string))
+    cmd := exec.Command("/bin/sh", "gensym.sh", version, info.project, info.lianyun, goCfgMgr.Get("libname", "inputname").(string), goCfgMgr.Get("libname", "outputname").(string), info.info_["version"])
     _, err := cmd.Output()
     if err != nil {
       log.Println("GenSym err:" + err.Error())
@@ -293,8 +298,16 @@ func (info *DumpFileInfo) GenNdkfile() {
       libname = goCfgMgr.Get("libname", "inputname").(string)
     }
 
+    version := info.info_["version"]
+
+    count := strings.Count(version, "_")
+    if count > 1 {
+      index := strings.Index(version, "_")
+      version = version[:index]
+    }
+
     if i < 10 {
-      result_str = "0" + strconv.Itoa(i) + "  pc " + hex.EncodeToString(buf) + "  " + info.info_["version"] + "_" + libname + " ()\n"
+      result_str = "0" + strconv.Itoa(i) + "  pc " + hex.EncodeToString(buf) + "  " + version + "_" + libname + " ()\n"
       file_context += (stack_head + result_str)
     }
 
@@ -371,6 +384,36 @@ func (info *DumpFileInfo) GenTar(mode string) {
   }
 }
 
+func (info *DumpFileInfo) GenTencentDumpInfo() {
+  path := "./" + info.project + "/dump/" + info.info_["version"] + "/" + info.file_name_
+
+  version := info.info_["version"]
+
+  count := strings.Count(version, "_")
+  if count > 1 {
+    index := strings.Index(version, "_")
+    version = version[:index]
+  }
+
+  context := file.ReadFile(path)
+  intputlibname := goCfgMgr.Get("libname", "inputname").(string)
+  outputlibname := goCfgMgr.Get("libname", "outputname").(string)
+
+  ref_str := strings.Replace(outputlibname, ".", "\\.", 1)
+  re := regexp.MustCompile(ref_str)
+  finale_context := string(context)
+  re.ReplaceAllLiteralString(finale_context, version+"_"+intputlibname)
+
+  file.WriteFile(path, []byte(finale_context), os.O_TRUNC)
+
+  cmd := exec.Command("/bin/sh", "./gen_ndk_info.sh", info.info_["version"], info.file_name_, info.project)
+  _, err := cmd.Output()
+  if err != nil {
+    log.Println("GenNdkfile err:" + err.Error())
+  }
+
+}
+
 func RecreateDumpInfo(pro string, lianyun string, filename string, ver string, name string) {
 
   var info DumpFileInfo
@@ -391,6 +434,40 @@ func RecreateDumpInfo(pro string, lianyun string, filename string, ver string, n
     info.GenNdkDumpInfo()
     info.GenDbInfo()
     info.GenTar("c")
+  }
+
+}
+
+func CreateTencentDumpInfo(pro string, lianyun string, filename string, ver string, name string) {
+
+  var info DumpFileInfo
+  info.InitData(pro, lianyun)
+
+  info.info_ = make(map[string]string)
+  info.info_[key_arr[1]] = filename
+  info.info_[key_arr[3]] = ver
+  info.info_[key_arr[4]] = pro
+
+  info.file_name_ = info.info_["UUID"] + ".txt"
+  log.Println("recreate: ", name)
+
+  cmd := exec.Command("/bin/sh", "gen_tencent_tar.sh", info.info_["version"], info.project, info.info_["UUID"], "x")
+  _, err := cmd.Output()
+  if err != nil {
+    log.Println("gen_tencent_tar err:" + err.Error())
+  }
+
+  result := info.GenSym()
+  if result {
+    info.GenTencentDumpInfo()
+    info.GenDbInfo()
+
+    cmd := exec.Command("/bin/sh", "gen_tencent_tar.sh", info.info_["version"], info.project, info.info_["UUID"], "c")
+    _, err := cmd.Output()
+    if err != nil {
+      log.Println("gen_tencent_tar err:" + err.Error())
+    }
+
   }
 
 }
