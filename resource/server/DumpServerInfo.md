@@ -95,11 +95,12 @@ CREATE TABLE proname
 (
 id int NOT NULL auto_increment,  
 address varchar(40) NOT NULL,   // 取崩溃dump前3个地址作为同一DUMP对比
-version varchar(10) NOT NULL,   // 版本
+version varchar(20) NOT NULL,   // 版本
 count int NOT NULL,             // 数量
 ndk text NOT NULL,              // 简易堆栈信息
 filelist text NOT NULL,         // 对应的dump文本 uuid
 lianyun varchar(20) NOT NULL default 'proname', // 联运平台标记
+lastupdate timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE
 PRIMARY KEY (id)
 );
 
@@ -108,9 +109,11 @@ CREATE TABLE proname_device
 (
 id int NOT NULL auto_increment,  
 address varchar(40) NOT NULL,   // 取崩溃dump前3个地址作为同一DUMP对比
-version varchar(10) NOT NULL,   // 版本
+version varchar(20) NOT NULL,   // 版本
 device varchar(40) NOT NULL,    // 设备
 lianyun varchar(20) NOT NULL default 'proname', // 联运平台标记
+uuid varchar(40) NOT NULL,
+addtime timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 PRIMARY KEY (id)
 );
 

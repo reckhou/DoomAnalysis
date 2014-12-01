@@ -20,6 +20,8 @@ import (
   "syscall"
 )
 
+import _ "net/http/pprof"
+
 type HTTPServer struct{}
 
 func handleListners(cl chan net.Listener) {
@@ -240,6 +242,10 @@ func (s HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
       path := "./" + proname + "/tencentdump/"
 
       go dumpfile.ListTencentFileName(path, ver, pro, lianyun)
+
+    } else if pat == "allversion" {
+
+      fmt.Fprintf(w, dbinfo.GetAllVersionList(pro))
 
     }
 

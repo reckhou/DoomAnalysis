@@ -376,7 +376,7 @@ func (info *DumpFileInfo) GenDbInfo() {
 
 func (info *DumpFileInfo) GenTar(mode string) {
   // info.info_["UUID"]
-  log.Println("GenTar err:" + info.info_["version"] + info.project + info.info_["UUID"] + mode)
+  log.Println("GenTar:" + info.info_["version"] + info.project + info.info_["UUID"] + mode)
   cmd := exec.Command("/bin/sh", "gen_tar.sh", info.info_["version"], info.project, info.info_["UUID"], mode)
   _, err := cmd.Output()
   if err != nil {
